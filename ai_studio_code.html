@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flashcards Widget</title>
+    <style>
+        /* --- Color Variables & Theming --- */
+        :root {
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --text: #37352f;
+            --text-muted: #9e9e9e;
+            --border: #e0e0e0;
+            --add-border: #cccccc;
+            --add-bg: #fafafa;
+            --accent: #2383e2;
+            --modal-bg: #ffffff;
+            --modal-overlay: rgba(0, 0, 0, 0.4);
+            --shadow: rgba(0, 0, 0, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #191919;
+                --card-bg: #252525;
+                --text: #ffffff;
+                --text-muted: #777777;
+                --border: #333333;
+                --add-border: #444444;
+                --add-bg: #1e1e1e;
+                --accent: #2eaadc;
+                --modal-bg: #2f2f2f;
+                --modal-overlay: rgba(0, 0, 0, 0.7);
+                --shadow: rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* --- Global Reset & Layout --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- 3D Scene Setup --- */
+        .scene-wrapper {
+            position: relative;
+            width: 580px;
+            height: 350px;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Responsive scaling for Notion blocks */
+        @media (max-width: 650px) { .scene-wrapper { transform: scale(0.8); } }
+        @media (max-width: 500px) { .scene-wrapper { transform: scale(0.6); } }
+        @media (max-width: 350px) { .scene-wrapper { transform: scale(0.45); } }
+
+        /* --- Add Card (The Blank '+' Card) --- */
+        .add-card {
+            position: absolute;
+            left: 0;
+            top: 25px;
+            width: 200px;
+            height: 300px;
+            background: var(--add-bg);
+            border: 3px dashed var(--add-border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .add-card:hover {
+            border-color: var(--accent);
+            background: rgba(35, 131, 226, 0.05);
+        }
+
+        .add-card .plus-icon {
+            font-size: 64px;
+            font-weight: 300;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .add-card:hover .plus-icon {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        /* --- Flashcards --- */
+        .flashcard {
+            position: absolute;
+            left: 0;
+            top: 25px;
+            width: 200px;
+            height: 300px;
+            border-radius: 16px;
+            transform-style: preserve-3d;
+            /* The back-out bezier gives it a snappy, bouncy 3D placement feel */
+            transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.1), z-index 0s;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            border-radius: 16px;
+            box-shadow: -5px 10px 20px var(--shadow);
+        }
+
+        .flashcard.is-flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            word-wrap: break-word;
+            overflow-y: auto;
+        }
+
+        .flashcard-front {
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .flashcard-back {
+            background: var(--card-bg);
+            color: var(--accent);
+            transform: rotateY(180deg);
+        }
+
+        /* --- Modal Overlay --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--modal-bg);
+            padding: 30px;
+            border-radius: 16px;
+            width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .modal input, .modal textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal input:focus, .modal textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .modal button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .modal button:hover {
+            opacity: 0.9;
+        }
+
+        /* Hide scrollbars on faces */
+        ::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body>
+
+    <div class="scene-wrapper" id="scene">
+        <!-- The static Add Button Card -->
+        <div class="add-card" id="add-btn">
+            <div class="plus-icon">+</div>
+        </div>
+    </div>
+
+    <!-- The Creation Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <h3>New Flashcard</h3>
+            <input type="text" id="front-input" placeholder="Front (e.g. Concept)" autocomplete="off">
+            <textarea id="back-input" rows="3" placeholder="Back (e.g. Definition)"></textarea>
+            <button id="save-btn">Add to Stack</button>
+        </div>
+    </div>
+
+    <script>
+        const addBtn = document.getElementById('add-btn');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const saveBtn = document.getElementById('save-btn');
+        const frontInput = document.getElementById('front-input');
+        const backInput = document.getElementById('back-input');
+        const scene = document.getElementById('scene');
+
+        let cards = [];
+
+        // 3D Stacking settings
+        const BASE_TRANSLATE_X = 320; // Distance to the right side of the add-card
+        const OFFSET_X = 12; // Gap between cards to the right
+        const OFFSET_Y = 6;  // Gap moving downwards
+        const OFFSET_Z = -25; // Depth gap pushing older cards backwards
+        const ROTATE_Z = 2;   // Slight rotation to look like a messy deck
+
+        // Show Modal
+        addBtn.addEventListener('click', () => {
+            frontInput.value = '';
+            backInput.value = '';
+            modalOverlay.classList.add('active');
+            frontInput.focus();
+        });
+
+        // Hide Modal on Background Click
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+        });
+
+        // Allow Enter to transition to next input
+        frontInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                backInput.focus();
+            }
+        });
+
+        // Add Card logic
+        saveBtn.addEventListener('click', () => {
+            const fText = frontInput.value.trim() || 'Blank Front';
+            const bText = backInput.value.trim() || 'Blank Back';
+            modalOverlay.classList.remove('active');
+            createCard(fText, bText);
+        });
+
+        function createCard(frontText, backText) {
+            // Build elements
+            const card = document.createElement('div');
+            card.className = 'flashcard';
+
+            const inner = document.createElement('div');
+            inner.className = 'flashcard-inner';
+
+            const faceFront = document.createElement('div');
+            faceFront.className = 'flashcard-face flashcard-front';
+            faceFront.innerText = frontText;
+
+            const faceBack = document.createElement('div');
+            faceBack.className = 'flashcard-face flashcard-back';
+            faceBack.innerText = backText;
+
+            inner.appendChild(faceFront);
+            inner.appendChild(faceBack);
+            card.appendChild(inner);
+
+            // Set initial position (exactly over the Add Button)
+            card.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateZ(0deg)`;
+            card.style.zIndex = cards.length + 1; 
+
+            // Add Interaction Logic
+            card.addEventListener('click', () => {
+                const isTopCard = (cards.indexOf(card) === cards.length - 1);
+                if (isTopCard) {
+                    // Top card clicks flip between question and answer
+                    card.classList.toggle('is-flipped');
+                } else {
+                    // Cards in the back are pulled to the front of the stack
+                    card.classList.remove('is-flipped');
+                    const idx = cards.indexOf(card);
+                    cards.splice(idx, 1);
+                    cards.push(card);
+                    updateStack();
+                }
+            });
+
+            scene.appendChild(card);
+            cards.push(card);
+
+            // Force reflow to ensure the slide animation triggers
+            card.offsetHeight; 
+
+            // Move card into its 3D position
+            updateStack();
+        }
+
+        // Calculate and apply 3D transforms for the whole deck
+        function updateStack() {
+            cards.forEach((card, index) => {
+                // indexFromTop = 0 means it's the newest/front-most card
+                const indexFromTop = cards.length - 1 - index;
+
+                const tx = BASE_TRANSLATE_X + (indexFromTop * OFFSET_X);
+                const ty = indexFromTop * OFFSET_Y;
+                const tz = indexFromTop * OFFSET_Z;
+                const rz = indexFromTop * ROTATE_Z;
+
+                card.style.transform = `translateX(${tx}px) translateY(${ty}px) translateZ(${tz}px) rotateZ(${rz}deg)`;
+                // The newest card gets the highest z-index
+                card.style.zIndex = index;
+            });
+        }
+    </script>
+</body>
+</html>
