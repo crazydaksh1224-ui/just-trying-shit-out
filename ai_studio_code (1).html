@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Hornet Widget</title>
+    <style>
+        /* --- Global Background & Centering --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #B300FF; /* Your requested purple background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Prevents scrollbars during bounce */
+        }
+
+        /* --- Rotation Wrapper (Handles the Click Bounce) --- */
+        .spin-wrapper {
+            cursor: pointer;
+            /* This cubic-bezier creates the smooth, springy 360 bounce effect */
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            -webkit-tap-highlight-color: transparent; /* Removes blue tap highlight on mobile */
+        }
+
+        /* --- Image Styling (Handles the Hover Expand) --- */
+        .spin-wrapper img {
+            width: 220px; /* You can change this to make the PNG bigger or smaller */
+            height: auto;
+            /* Smooth transition for the hover expansion */
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.3s ease;
+            /* Adds a slight UI drop-shadow to make it pop against the purple */
+            filter: drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.3)); 
+            display: block;
+        }
+
+        /* --- Hover Effect --- */
+        .spin-wrapper:hover img {
+            transform: scale(1.15); /* Expands the image by 15% */
+            filter: drop-shadow(0px 15px 25px rgba(0, 0, 0, 0.5)); /* Deepens shadow on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- The Wrapper spins, the Image scales -->
+    <div class="spin-wrapper" id="spinner">
+        <!-- Direct PNG link successfully extracted from your Postimg URL -->
+        <img src="https://i.postimg.cc/4Jj4jyQd/Untitled-design-Photoroom.png" alt="Hornet Hollow Knight">
+    </div>
+
+    <script>
+        const spinner = document.getElementById('spinner');
+        let currentRotation = 0;
+
+        // Listen for the click event
+        spinner.addEventListener('click', () => {
+            // Adds 360 degrees to the rotation counter every time it's clicked
+            // (This prevents the animation from snapping backwards)
+            currentRotation += 360;
+            spinner.style.transform = `rotate(${currentRotation}deg)`;
+        });
+    </script>
+
+</body>
+</html>
