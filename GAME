@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kindred Grove Notion Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fdf6e3;
+            --accent-soft: #94a684;
+            --accent-warm: #d4a373;
+            --text-color: #5c5346;
+            --panel-bg: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: 'Gaegu', cursive;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* --- UI Elements --- */
+        #header {
+            text-align: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            background: var(--panel-bg);
+            border-radius: 15px;
+            padding: 5px 10px;
+            border: 2px solid var(--text-color);
+            box-shadow: 3px 3px 0px var(--text-color);
+        }
+
+        /* --- The Town Canvas --- */
+        #game-canvas {
+            position: relative;
+            width: 300px;
+            height: 250px;
+            background: #e9edc9;
+            border: 3px solid var(--text-color);
+            border-radius: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .building {
+            position: absolute;
+            transition: all 1s ease;
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+            opacity: 0.2; /* Unbuilt state */
+        }
+
+        .building.built { opacity: 1; transform: scale(1.1); }
+
+        /* --- Hand-Drawn Mascot (Arrow the Scout) --- */
+        #mascot {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            animation: float 3s infinite ease-in-out;
+            z-index: 10;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(5deg); }
+            50% { transform: translateY(-10px) rotate(-5deg); }
+        }
+
+        #speech-bubble {
+            position: absolute;
+            bottom: 65px;
+            right: 10px;
+            background: white;
+            border: 2px solid var(--text-color);
+            padding: 8px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            width: 120px;
+            box-shadow: 3px 3px 0px var(--text-color);
+            display: none;
+        }
+
+        /* --- Buttons & Interaction --- */
+        .controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        button {
+            background: white;
+            border: 2px solid var(--text-color);
+            padding: 8px;
+            border-radius: 10px;
+            font-family: 'Gaegu', cursive;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 3px 3px 0px var(--text-color);
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--text-color);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tax-indicator {
+            font-size: 0.7rem;
+            color: #8b5e34;
+            display: block;
+        }
+
+        /* --- Year Display --- */
+        #year-badge {
+            background: var(--accent-warm);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <span id="year-badge">Year 1: The Seed</span>
+        <div class="stats-row">
+            <div>💰 Coins: <span id="coins">20</span></div>
+            <div>🏗️ Town Fund: <span id="fund">0</span>/50</div>
+        </div>
+    </div>
+
+    <div id="game-canvas">
+        <!-- Hand Drawn SVG Bakery -->
+        <svg class="building built" style="left: 20px; top: 80px;" width="80" height="80" viewBox="0 0 100 100">
+            <path d="M10,80 L90,80 L90,40 L50,10 L10,40 Z" fill="#faedcd" stroke="#5c5346" stroke-width="3"/>
+            <rect x="35" y="50" width="30" height="30" fill="#d4a373" stroke="#5c5346" stroke-width="2"/>
+            <text x="32" y="35" font-size="10">BAKERY</text>
+        </svg>
+
+        <!-- The Bridge (Unlocked by Year 1 Taxes) -->
+        <svg id="bridge" class="building" style="left: 140px; top: 120px;" width="120" height="60" viewBox="0 0 120 60">
+            <path d="M0,40 Q60,10 120,40 L120,50 Q60,20 0,50 Z" fill="#ccd5ae" stroke="#5c5346" stroke-width="3"/>
+            <path d="M30,30 L30,50 M60,20 L60,50 M90,30 L90,50" stroke="#5c5346" stroke-width="2"/>
+        </svg>
+
+        <!-- The Library (Unlocked by Year 2 Taxes) -->
+        <svg id="library" class="building" style="left: 180px; top: 30px;" width="80" height="80" viewBox="0 0 100 100">
+            <path d="M20,80 L80,80 L80,30 L50,10 L20,30 Z" fill="#a98467" stroke="#5c5346" stroke-width="3"/>
+            <rect x="40" y="55" width="20" height="25" fill="#fefae0" stroke="#5c5346" stroke-width="2"/>
+            <text x="32" y="45" font-size="10" fill="white">BOOKS</text>
+        </svg>
+
+        <!-- Mascot -->
+        <div id="speech-bubble">Hi! I'm Arrow. Let's grow our town together!</div>
+        <div id="mascot">
+            <svg viewBox="0 0 100 100">
+                <path d="M50,10 L90,50 L70,50 L70,90 L30,90 L30,50 L10,50 Z" fill="#94a684" stroke="#5c5346" stroke-width="5"/>
+                <circle cx="40" cy="40" r="5" fill="#5c5346"/>
+                <circle cx="60" cy="40" r="5" fill="#5c5346"/>
+                <path d="M40,60 Q50,70 60,60" fill="none" stroke="#5c5346" stroke-width="3" stroke-linecap="round"/>
+                <!-- Hat -->
+                <path d="M30,20 L70,20 L50,5 Z" fill="#d4a373" stroke="#5c5346" stroke-width="2"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="work-btn" onclick="earnMoney()">🥖 Bake Sourdough (+10 Coins)</button>
+        <button id="tax-btn" onclick="contributeTax()">
+            🏠 Contribute to Town Fund
+            <span class="tax-indicator">Cost: 15 Coins (5 build the bridge!)</span>
+        </button>
+    </div>
+
+    <script>
+        // Game State
+        let state = {
+            coins: 20,
+            fund: 0,
+            year: 1,
+            unlocked: []
+        };
+
+        const messages = [
+            "Year 1: Sales tax is like a tiny seed everyone plants together!",
+            "Look! Your contribution is helping build the Cozy Bridge!",
+            "Taxes aren't lost money; they are shared LEGO blocks for our town.",
+            "Year 2: Income tax helps us build the Library for everyone."
+        ];
+
+        function updateUI() {
+            document.getElementById('coins').innerText = state.coins;
+            document.getElementById('fund').innerText = state.fund;
+            
+            const taxBtn = document.getElementById('tax-btn');
+            const bubble = document.getElementById('speech-bubble');
+            const yearBadge = document.getElementById('year-badge');
+
+            // Handle Milestones
+            if (state.fund >= 50 && state.year === 1) {
+                document.getElementById('bridge').classList.add('built');
+                state.year = 2;
+                state.fund = 0;
+                yearBadge.innerText = "Year 2: The Harvest";
+                taxBtn.innerHTML = `📚 Build Community Library <span class="tax-indicator">Cost: 20 Coins (8 for books!)</span>`;
+                showMascotText("Amazing! The bridge is open! Now, let's build a library.");
+            }
+
+            if (state.fund >= 80 && state.year === 2) {
+                document.getElementById('library').classList.add('built');
+                showMascotText("A town that reads together, stays together! You're a tax pro!");
+            }
+
+            // Save Progress
+            localStorage.setItem('kindredGroveSave', JSON.stringify(state));
+        }
+
+        function earnMoney() {
+            state.coins += 10;
+            updateUI();
+            if(Math.random() > 0.7) showMascotText("Smells delicious! Sell those to earn more.");
+        }
+
+        function contributeTax() {
+            let cost = state.year === 1 ? 15 : 20;
+            let taxValue = state.year === 1 ? 5 : 8;
+
+            if (state.coins >= cost) {
+                state.coins -= cost;
+                state.fund += taxValue;
+                updateUI();
+                showMascotText(messages[Math.floor(Math.random() * 3)]);
+            } else {
+                showMascotText("Oops! Need more coins to help the town.");
+            }
+        }
+
+        function showMascotText(txt) {
+            const bubble = document.getElementById('speech-bubble');
+            bubble.innerText = txt;
+            bubble.style.display = 'block';
+            setTimeout(() => { bubble.style.display = 'none'; }, 4000);
+        }
+
+        // Load Save Data
+        window.onload = () => {
+            const saved = localStorage.getItem('kindredGroveSave');
+            if (saved) {
+                state = JSON.parse(saved);
+                // Re-apply visual states
+                if (state.year >= 2) document.getElementById('bridge').classList.add('built');
+                if (state.fund >= 80 && state.year >= 2) document.getElementById('library').classList.add('built');
+                updateUI();
+            }
+        };
+    </script>
+</body>
+</html>
