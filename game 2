@@ -2,31 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Cozy Bakery+</title>
+<title>Cozy Bakery Pro</title>
 
 <style>
 * {
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 body {
-  background:#ffffff;
+  background:#fff;
   overflow:hidden;
+  cursor:none; /* HIDE REAL CURSOR */
 }
 
-/* CURSOR */
+/* CUSTOM CURSOR */
 .cursor {
   position:fixed;
-  width:40px;
-  height:40px;
-  border-radius:14px;
-  background:#f2f2f2;
+  width:50px;
+  height:50px;
+  border-radius:18px;
+  background:#f3f3f3;
   pointer-events:none;
   transform:translate(-50%,-50%);
-  transition:transform 0.15s ease-out;
   z-index:999;
 }
 
@@ -67,50 +67,43 @@ body {
   font-size:30px;
   background:white;
   box-shadow:0 10px 20px rgba(0,0,0,0.1);
-  transition:transform 0.2s ease, box-shadow 0.3s;
+  transition:box-shadow 0.3s;
   transform-style:preserve-3d;
-  cursor:pointer;
-}
-
-.card:hover {
-  box-shadow:0 15px 25px rgba(0,0,0,0.15);
 }
 
 /* FEEDBACK */
-.correct {
-  animation:pop 0.4s;
-}
-
-.wrong {
-  animation:shake 0.3s;
-}
+.correct { animation:pop 0.3s; }
+.wrong { animation:shake 0.3s; }
 
 @keyframes pop {
-  50% { transform:scale(1.2); }
+  50% { transform:scale(1.1); }
 }
 
 @keyframes shake {
-  25% { transform:translateX(-5px); }
-  75% { transform:translateX(5px); }
+  25% { transform:translateX(-4px); }
+  75% { transform:translateX(4px); }
 }
 
-/* FACT CARD */
+/* FACT PANEL */
 .fact {
   position:fixed;
-  bottom:-20px;
-  right:20px;
-  width:220px;
-  padding:15px;
-  border-radius:20px;
+  bottom:-10px;
+  right:0;
+  width:100%;
+  height:50vh;
   background:white;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  font-size:13px;
+  border-radius:30px 30px 0 0;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.2);
+  padding:30px;
+  font-size:20px;
+  font-weight:bold;
+  line-height:1.5;
   animation:slideUp 0.4s ease;
 }
 
 @keyframes slideUp {
-  from { transform:translateY(100px); opacity:0; }
-  to { transform:translateY(0); opacity:1; }
+  from { transform:translateY(100%); }
+  to { transform:translateY(0); }
 }
 
 </style>
@@ -138,12 +131,12 @@ let level = 1;
 const items = ["🍞","🥐","🧁","🍩","🍪","🍰"];
 
 const facts = {
-  "🍞":"Bread is one of the oldest foods ever made!",
-  "🥐":"Croissants were inspired by Austrian kipferl.",
-  "🧁":"Cupcakes became popular in the 19th century.",
-  "🍩":"Doughnuts were once called 'oily cakes'.",
-  "🍪":"Cookies were first used as test cakes.",
-  "🍰":"Cake was originally more bread-like!"
+  "🍞":"Bread is one of the oldest prepared foods in human history.",
+  "🥐":"Croissants were inspired by Austrian pastries, not France originally.",
+  "🧁":"Cupcakes were called 'number cakes' due to easy measurement.",
+  "🍩":"Doughnuts were popularized by Dutch settlers in America.",
+  "🍪":"Cookies started as small test cakes for oven temperature.",
+  "🍰":"Cakes evolved from bread with added honey and nuts."
 };
 
 /* GRID */
@@ -186,46 +179,57 @@ function clickCard(el,item) {
   setTimeout(generateGrid,400);
 }
 
-/* FACT CARD */
+/* FACT PANEL */
 function showFact(item) {
   let old = document.querySelector(".fact");
   if(old) old.remove();
 
   let div = document.createElement("div");
   div.className = "fact";
-  div.innerText = facts[item] || "Tasty item!";
+  div.innerText = facts[item];
 
   document.body.appendChild(div);
 
-  setTimeout(()=>div.remove(),3000);
+  setTimeout(()=>div.remove(),4000);
 }
 
-/* 3D ROTATION FOLLOW MOUSE */
+/* STABLE 3D ROTATION */
 document.addEventListener("mousemove",(e)=>{
   document.querySelectorAll(".card").forEach(card=>{
     let rect = card.getBoundingClientRect();
+
     let x = (e.clientX - rect.left) / rect.width - 0.5;
     let y = (e.clientY - rect.top) / rect.height - 0.5;
 
     card.style.transform = `
-      rotateY(${x*20}deg)
-      rotateX(${-y*20}deg)
-      scale(1.05)
+      rotateY(${x*8}deg)
+      rotateX(${-y*8}deg)
     `;
   });
 });
 
-/* CURSOR (SMOOTH FOLLOW) */
+/* SMOOTH CURSOR WITH BOUNCE */
 const cursor = document.getElementById("cursor");
-let cx = 0, cy = 0;
+
+let x = 0, y = 0;
+let tx = 0, ty = 0;
 
 document.addEventListener("mousemove",(e)=>{
-  cx += (e.clientX - cx)*0.15;
-  cy += (e.clientY - cy)*0.15;
-
-  cursor.style.left = cx + "px";
-  cursor.style.top = cy + "px";
+  tx = e.clientX;
+  ty = e.clientY;
 });
+
+function animateCursor(){
+  x += (tx - x) * 0.2;
+  y += (ty - y) * 0.2;
+
+  cursor.style.left = x + "px";
+  cursor.style.top = y + "px";
+
+  requestAnimationFrame(animateCursor);
+}
+
+animateCursor();
 
 /* INIT */
 generateGrid();
