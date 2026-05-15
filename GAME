@@ -1,216 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Flashcard Stack Widget</title>
-    <style>
-        /* CSS Variables for Light & Dark mode support */
-        :root {
-            --bg-color: transparent;
-            --card-bg: #ffffff;
-            --card-border: #e0e0e0;
-            --text-color: #37352f;
-            --plus-color: #d3d3d3;
-            --plus-hover: #a0a0a0;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard Widget</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Auto-detects Notion's Dark Mode via browser preference */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --card-bg: #252525;
-                --card-border: #333333;
-                --text-color: #ffffff;
-                --plus-color: #666666;
-                --plus-hover: #aaaaaa;
-                --shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
-                --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
-            }
-        }
+  :root {
+    --bg: #f5f4f0;
+    --card-bg: #ffffff;
+    --card-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+    --card-hover-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.07);
+    --text-primary: #1a1a1a;
+    --text-muted: #9a9a8e;
+    --accent: #e8845a;
+    --accent-light: #fdf0ea;
+    --radius: 16px;
+    --card-w: 200px;
+    --card-h: 260px;
+  }
 
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--bg-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Prevents scrollbars when cards stack far to the right */
-        }
+  /* Subtle paper texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(232,132,90,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(100,130,200,0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
 
-        /* The deck wrapper dynamically resizes to keep the whole block centered visually */
-        .deck {
-            position: relative;
-            width: 140px; 
-            height: 200px;
-            transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+  .scene {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+  }
 
-        /* Base Card Styles */
-        .card {
-            width: 140px;
-            height: 200px;
-            border-radius: 16px;
-            background-color: var(--card-bg);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--card-border);
-            position: absolute;
-            top: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: var(--text-color);
-        }
+  /* Stack container — cards pile up here */
+  .stack-wrapper {
+    position: relative;
+    width: var(--card-w);
+    height: var(--card-h);
+  }
 
-        /* The Initial '+' Card */
-        .plus-card {
-            left: 0;
-            z-index: 1000;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+  /* Base card (the + trigger) */
+  .add-card {
+    position: absolute;
+    inset: 0;
+    width: var(--card-w);
+    height: var(--card-h);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: box-shadow 0.25s ease, transform 0.2s ease;
+    user-select: none;
+    z-index: 1;
+    border: 1.5px dashed rgba(0,0,0,0.1);
+  }
 
-        .plus-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-        }
+  .add-card:hover {
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
 
-        .plus-card:active {
-            transform: translateY(0);
-            box-shadow: var(--shadow);
-        }
+  .add-card:active {
+    transform: translateY(0px) scale(0.98);
+  }
 
-        .plus-card:hover .plus-icon::before,
-        .plus-card:hover .plus-icon::after {
-            background-color: var(--plus-hover);
-        }
+  .plus-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+  }
 
-        /* CSS Drawn Plus Icon for absolute crispness */
-        .plus-icon {
-            position: relative;
-            width: 40px;
-            height: 40px;
-        }
+  .add-card:hover .plus-circle {
+    background: var(--accent);
+    transform: rotate(90deg) scale(1.1);
+  }
 
-        .plus-icon::before, .plus-icon::after {
-            content: '';
-            position: absolute;
-            background-color: var(--plus-color);
-            border-radius: 2px;
-            transition: background-color 0.2s ease;
-        }
+  .plus-circle svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    transition: stroke 0.2s;
+  }
 
-        .plus-icon::before { /* Vertical Line */
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 4px;
-            transform: translateX(-50%);
-        }
+  .add-card:hover .plus-circle svg {
+    stroke: #fff;
+  }
 
-        .plus-icon::after { /* Horizontal Line */
-            left: 0;
-            right: 0;
-            top: 50%;
-            height: 4px;
-            transform: translateY(-50%);
-        }
+  .add-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
 
-        /* Generated Stacked Cards */
-        .gen-card {
-            font-size: 1.2rem;
-            font-weight: 600;
-            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                        opacity 0.3s ease;
-        }
-        
-        .card-number {
-            font-size: 0.8rem;
-            color: var(--plus-color);
-            margin-top: 8px;
-            font-weight: 400;
-        }
-    </style>
+  .add-card:hover .add-label {
+    color: var(--accent);
+  }
+
+  /* ── Stacked flash cards ── */
+  .flash-card {
+    position: absolute;
+    width: var(--card-w);
+    height: var(--card-h);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: default;
+    /* start off-screen right, then animate in */
+    transform: translateX(60px) translateY(20px) rotate(6deg);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease, box-shadow 0.2s;
+    pointer-events: none;
+  }
+
+  .flash-card.placed {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Each successive card offsets slightly right + small rotation */
+  .flash-card:hover {
+    box-shadow: var(--card-hover-shadow);
+    z-index: 999 !important;
+    transform: none !important;
+  }
+
+  /* Card inner content */
+  .card-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-light);
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    width: fit-content;
+  }
+
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .card-body {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+
+  .card-num {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .card-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  /* counter badge above stack */
+  .counter {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: opacity 0.3s;
+    font-weight: 400;
+  }
+
+  .counter.hidden { opacity: 0; }
+</style>
 </head>
 <body>
 
-    <!-- Container for the cards -->
-    <div class="deck" id="deck">
-        <!-- The Generator Card -->
-        <div class="card plus-card" id="addBtn">
-            <div class="plus-icon"></div>
-        </div>
+<div class="scene">
+  <div class="stack-wrapper" id="stackWrapper">
+    <div class="counter hidden" id="counter">0 cards</div>
+
+    <!-- Add card trigger -->
+    <div class="add-card" id="addCard" onclick="createCard()">
+      <div class="plus-circle">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <span class="add-label">New card</span>
     </div>
+  </div>
+</div>
 
-    <script>
-        let count = 0;
-        const addBtn = document.getElementById('addBtn');
-        const deck = document.getElementById('deck');
+<script>
+  const cardData = [
+    { tag: "Design", title: "Visual Hierarchy", body: "Arrange elements so readers naturally flow toward the most important content first." },
+    { tag: "Type", title: "Serif vs Sans", body: "Serifs feel editorial and warm. Sans-serifs read clean and modern. Mix both intentionally." },
+    { tag: "Color", title: "60-30-10 Rule", body: "60% dominant, 30% secondary, 10% accent. A simple formula for balanced palettes." },
+    { tag: "Layout", title: "Grid Systems", body: "Invisible columns create invisible order. Break them deliberately for emphasis." },
+    { tag: "Motion", title: "Easing Curves", body: "ease-in for exits, ease-out for entrances. Never use linear — nothing in nature moves linearly." },
+    { tag: "Space", title: "Negative Space", body: "What you leave out is as powerful as what you put in. Let things breathe." },
+    { tag: "UX", title: "Fitts's Law", body: "Larger targets that are closer are faster to click. Size your buttons accordingly." },
+    { tag: "Gestalt", title: "Proximity", body: "Elements near each other are perceived as related. Use spacing to group meaning." },
+  ];
 
-        addBtn.addEventListener('click', () => {
-            count++;
-            
-            // 1. Create the new flash card element
-            const card = document.createElement('div');
-            card.className = 'card gen-card';
-            
-            // 2. Add text contents inside
-            const title = document.createElement('div');
-            title.innerText = 'Card';
-            const num = document.createElement('div');
-            num.className = 'card-number';
-            num.innerText = '#' + count;
-            
-            card.appendChild(title);
-            card.appendChild(num);
-            
-            // 3. Set Base styles so it animates spawning out of the main card
-            card.style.zIndex = count; // New cards stack on top of older generated cards
-            card.style.left = '0px';
-            card.style.transform = 'translateY(0) scale(0.8)';
-            card.style.opacity = '0';
-            
-            // 4. Append to screen
-            deck.appendChild(card);
-            
-            // 5. Expand the wrapper so Flexbox keeps the whole layout perfectly centered
-            const cardWidth = 140;
-            const gap = 20;
-            const offsetPerCard = 15;
-            
-            if (count === 1) {
-                deck.style.width = `${cardWidth + gap + cardWidth}px`;
-            } else {
-                deck.style.width = `${cardWidth + gap + (count - 1) * offsetPerCard + cardWidth}px`;
-            }
-            
-            // 6. Force Reflow and Apply Final Frame Animations
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // Calculate stacking coordinates
-                    const targetLeft = cardWidth + gap + (count - 1) * offsetPerCard;
-                    const targetY = (count - 1) * -3; // Slight upward diagonal shift
-                    
-                    // Add an organic, randomized tilt between -4 and 4 degrees
-                    const randomRotate = (Math.random() - 0.5) * 8; 
-                    
-                    // Apply final state to trigger CSS transition
-                    card.style.left = `${targetLeft}px`;
-                    card.style.transform = `translateY(${targetY}px) scale(1) rotate(${randomRotate}deg)`;
-                    card.style.opacity = '1';
-                });
-            });
-        });
-    </script>
+  let cardCount = 0;
+  const wrapper = document.getElementById('stackWrapper');
+  const addCard = document.getElementById('addCard');
+  const counter = document.getElementById('counter');
+
+  function createCard() {
+    const data = cardData[cardCount % cardData.length];
+    cardCount++;
+
+    const card = document.createElement('div');
+    card.className = 'flash-card';
+
+    // Stack offset: each card nudges right and slightly rotates
+    const offsetX = cardCount * 6;
+    const offsetY = cardCount * -3;
+    const rotate = (cardCount % 2 === 0 ? 1 : -1) * (cardCount * 1.2);
+    const zIndex = cardCount + 1;
+
+    card.style.zIndex = zIndex;
+    // Final resting position
+    const finalTransform = `translateX(${offsetX}px) translateY(${offsetY}px) rotate(${rotate}deg)`;
+
+    card.innerHTML = `
+      <div class="card-tag">${data.tag}</div>
+      <div class="card-title">${data.title}</div>
+      <div class="card-body">${data.body}</div>
+      <div class="card-footer">
+        <span class="card-num">#${String(cardCount).padStart(2,'0')}</span>
+        <div class="card-dot"></div>
+      </div>
+    `;
+
+    // Insert before the add-card so it sits behind it visually while animating
+    wrapper.insertBefore(card, addCard);
+
+    // Trigger fly-in animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        card.style.transform = finalTransform;
+        card.classList.add('placed');
+      });
+    });
+
+    // Raise add-card z-index above all stacked cards
+    addCard.style.zIndex = cardCount + 10;
+
+    // Update counter
+    counter.classList.remove('hidden');
+    counter.textContent = cardCount === 1 ? '1 card' : `${cardCount} cards`;
+  }
+</script>
 </body>
 </html>
