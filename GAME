@@ -1,175 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        :root {
+            --bg-color: #ffffff;
+            --card-width: 150px;
+            --card-height: 220px;
+        }
 
         body {
-            background-color: white;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Fredoka One', cursive;
-            cursor: none; /* Hide default cursor */
+            background-color: var(--bg-color);
             display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 50px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            overflow-x: auto;
         }
 
-        /* Custom Cursor */
-        .cursor {
-            width: 40px;
-            height: 40px;
-            background: black;
-            border: 3px solid white;
-            border-radius: 50% 50% 20% 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            transition: transform 0.1s ease-out;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
-
-        /* Card Container with Invisible Overflow for Shadow */
-        .card-wrapper {
+        #container {
+            display: flex;
+            gap: 20px;
             perspective: 1000px;
-            padding: 100px; /* Invisible frame for shadow */
-            position: absolute;
-            transition: left 0.5s ease;
+            align-items: center;
         }
 
-        .card {
-            width: 250px;
-            height: 350px;
-            background: white;
-            border-radius: 20px;
+        /* The Interactive Blank Card */
+        .main-card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: #000;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.1s ease-out;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background-image: 
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
-        /* Glare Effect */
-        .card::before {
-            content: '';
+        .main-card::before {
+            content: "+";
+            color: white;
+            font-size: 3rem;
+            font-weight: 200;
+        }
+
+        /* The Rectangular Glare */
+        .glare {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.15) 45%,
+                rgba(255, 255, 255, 0.25) 50%,
+                rgba(255, 255, 255, 0.15) 55%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            border-radius: 12px;
             pointer-events: none;
-            opacity: 0.3;
+            opacity: 0;
             transition: opacity 0.3s;
         }
 
-        .plus-icon {
-            font-size: 50px;
-            color: #ddd;
-            user-select: none;
+        .main-card:hover .glare {
+            opacity: 1;
         }
 
-        .content {
-            padding: 20px;
-            width: 80%;
-            outline: none;
-            text-align: center;
-            z-index: 1;
-            font-size: 1.2rem;
-            color: #333;
+        /* Stacked Cards */
+        .stacked-card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background-size: cover;
+            background-position: center;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            flex-shrink: 0;
         }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px) scale(0.8); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        #fileInput { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="cursor" id="cursor"></div>
-    <input type="file" id="fileInput" style="display: none;" accept="image/*">
-    
-    <div id="stage"></div>
+    <div id="container">
+        <!-- The Interactive Controller Card -->
+        <div class="main-card" id="triggerCard">
+            <div class="glare" id="glareOverlay"></div>
+        </div>
+        
+        <!-- New cards will appear here -->
+        <div id="stack" style="display: flex; gap: 15px;"></div>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/png">
 
     <script>
-        const cursor = document.getElementById('cursor');
-        const stage = document.getElementById('stage');
+        const card = document.getElementById('triggerCard');
+        const glare = document.getElementById('glareOverlay');
         const fileInput = document.getElementById('fileInput');
-        let cardCount = 0;
-        let activeCard = null;
+        const stack = document.getElementById('stack');
 
-        // Custom Cursor movement
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX - 20 + 'px';
-            cursor.style.top = e.clientY - 20 + 'px';
-            cursor.style.transform = 'scale(1.2)';
+        // 3D Tilt Effect
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
             
-            clearTimeout(window.cursorTimeout);
-            window.cursorTimeout = setTimeout(() => {
-                cursor.style.transform = 'scale(1)';
-            }, 100);
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (centerY - y) / 5;
+            const rotateY = (x - centerX) / 5;
+            
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+            
+            // Move glare
+            const glareX = (x / rect.width) * 100;
+            const glareY = (y / rect.height) * 100;
+            glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 80%)`;
         });
 
-        function createCard(xPos) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'card-wrapper';
-            wrapper.style.left = xPos + 'px';
-            
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = '<div class="plus-icon">+</div><div class="content" contenteditable="true"></div>';
-            
-            // Interaction: 3D Tilt
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateY = (x - centerX) / 10;
-                const rotateX = (centerY - y) / 10;
-                card.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-            });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
+            glare.style.opacity = '0';
+        });
 
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'rotateY(0deg) rotateX(0deg)';
-            });
+        // Trigger File Upload
+        card.addEventListener('click', () => {
+            fileInput.click();
+        });
 
-            // Click: Add new card
-            card.addEventListener('click', (e) => {
-                if (e.target.classList.contains('content')) return; // Allow typing
-                createCard(cardCount * 300);
-            });
-
-            // Right Click: Upload Image
-            card.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                activeCard = card;
-                fileInput.click();
-            });
-
-            wrapper.appendChild(card);
-            stage.appendChild(wrapper);
-            cardCount++;
-        }
-
-        // Handle Image Upload
-        fileInput.addEventListener('change', (e) => {
+        // Handle Image and Stack Card
+        fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (file && activeCard) {
+            if (file) {
                 const reader = new FileReader();
-                reader.onload = (event) => {
-                    activeCard.style.backgroundImage = `url(${event.target.result}), url("data:image/svg+xml,...")`;
-                    activeCard.style.backgroundSize = 'cover';
-                    activeCard.style.backgroundPosition = 'center';
-                    activeCard.querySelector('.plus-icon').style.display = 'none';
-                };
+                reader.onload = function(event) {
+                    const newCard = document.createElement('div');
+                    newCard.className = 'stacked-card';
+                    newCard.style.backgroundImage = `url('${event.target.result}')`;
+                    stack.appendChild(newCard);
+                }
                 reader.readAsDataURL(file);
             }
+            // Reset input so same file can be picked again
+            this.value = '';
         });
-
-        // Initialize first card
-        createCard(window.innerWidth / 2 - 125);
     </script>
 </body>
 </html>
