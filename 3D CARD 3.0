@@ -10,28 +10,81 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background-color: #ffffff; /* Pure white background */
+            background-color: #ffffff; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow: hidden; 
-            
-            /* Hides the default computer cursor so we can use our custom bouncy one */
             cursor: none !important; 
-            user-select: none; /* Prevents accidental text selection while dragging */
+            user-select: none; 
         }
 
-        /* --- Main Layout Wrapper --- */
         .main-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100vw;
             height: 100vh;
+            position: relative;
+        }
+
+        /* --- NEW: Left Factory Conveyor Belt --- */
+        .left-panel {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 140px;
+            background-color: #ffffff;
+            /* Thick black lined borders, cut off by the left screen edge */
+            border-right: 12px solid #000000;
+            z-index: 5;
+            overflow: hidden;
+            
+            /* Hidden until uploaded */
+            transform: translateX(-100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Inner lines to look like a mechanical trail/belt */
+        .left-panel::before, .left-panel::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 4px;
+            background-color: #000000;
+            z-index: 1;
+        }
+        .left-panel::before { left: 16px; }
+        .left-panel::after { right: 16px; }
+
+        .left-panel.active {
+            transform: translateX(0);
+        }
+
+        /* Conveyor belt items */
+        .conveyor-item {
+            position: absolute;
+            left: 20px; /* Centered between the belt lines */
+            width: 100px;
+            height: 100px;
+            background-repeat: no-repeat;
+            
+            /* Cropped and highly pixelated */
+            background-size: 350%; 
+            image-rendering: pixelated; /* Retro/Pixelated effect */
+            image-rendering: crisp-edges;
+            
+            z-index: 2;
+            animation: moveDown 8s linear infinite;
+        }
+
+        @keyframes moveDown {
+            0% { transform: translateY(-150px) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(30deg); }
         }
 
         /* --- 3D Scene Wrapper --- */
         .scene {
             perspective: 1500px;
-            /* EXTENDED PADDING: Prevents the shadow from being cut off at steep angles */
             padding: 150px; 
             z-index: 10;
         }
@@ -42,30 +95,24 @@
             height: 400px;
             background-color: #ffffff;
             border-radius: 20px;
-            
-            /* Enhanced, smoother shadow that bleeds out further */
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15); 
             border: 1px solid #e0e0e0; 
-            
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
             overflow: hidden; 
-            
             transform-style: preserve-3d;
             background-position: center;
             background-repeat: no-repeat;
         }
 
-        /* --- State when PNG is added --- */
         .card.has-image {
             background-color: transparent; 
             border: none;
             background-size: 100% 100%; 
         }
 
-        /* --- The Plus Icon --- */
         .plus-icon {
             font-size: 72px;
             font-weight: 300;
@@ -75,19 +122,14 @@
             z-index: 2;
         }
 
-        /* --- Flat Anime-Style Rectangle Glare --- */
         .glare {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            
             background: linear-gradient(
                 105deg,
-                transparent 0%,
-                transparent 42%,
-                rgba(255, 255, 255, 0.15) 42%, 
-                rgba(255, 255, 255, 0.15) 55%, 
-                transparent 55%,
-                transparent 100%
+                transparent 0%, transparent 42%,
+                rgba(255, 255, 255, 0.15) 42%, rgba(255, 255, 255, 0.15) 55%, 
+                transparent 55%, transparent 100%
             );
             background-size: 250% 250%;
             background-position: 50% 50%;
@@ -101,10 +143,10 @@
             opacity: 1; 
         }
 
-        /* --- NEW: Right Side UI Panel --- */
+        /* --- Right Side UI Panel --- */
         .right-panel {
-            background-color: #000000; /* Black / Blank UI color */
-            border-radius: 30px; /* All corners rounded */
+            background-color: #000000; 
+            border-radius: 30px; 
             width: 0;
             opacity: 0;
             overflow: hidden;
@@ -127,13 +169,13 @@
 
         .right-panel-content {
             width: 100%;
-            min-width: 260px; /* Maintains structure during width transition */
+            min-width: 260px; 
             display: flex;
             flex-direction: column;
             align-items: center;
             opacity: 0;
             transition: opacity 0.4s ease;
-            transition-delay: 0.2s; /* Fades in smoothly */
+            transition-delay: 0.2s; 
         }
 
         .right-panel.active .right-panel-content {
@@ -143,7 +185,7 @@
         .type-prompt {
             color: #ffffff;
             font-size: 14px;
-            font-weight: 800; /* Bold */
+            font-weight: 800; 
             margin-bottom: 20px;
             text-align: center;
             letter-spacing: 1.5px;
@@ -154,39 +196,39 @@
         .bar-container {
             width: 100%;
             height: 24px;
-            background-color: #2a2a2a;
-            border-radius: 50px; /* Rounded corners */
+            /* Default back color, gets updated to previous max-saturation color */
+            background-color: #2a2a2a; 
+            border-radius: 50px; 
             margin-bottom: 30px;
             overflow: hidden;
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.5);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.8);
             border: 2px solid #333;
+            transition: background-color 0.4s ease;
         }
 
         /* Loading bar fill */
         .bar-fill {
             height: 100%;
             width: 0%;
-            border-radius: 50px; /* Rounded corners */
-            transition: width 0.1s linear, background-color 0.4s ease;
+            border-radius: 50px; 
+            transition: width 0.1s linear, background-color 0.4s ease, box-shadow 0.4s ease;
         }
 
         /* Text Input */
         .curvy-text-input {
             width: 100%;
             padding: 16px 20px;
-            border-radius: 50px; /* Curvy Edges */
+            border-radius: 50px; 
             border: 2px solid #333;
             outline: none;
             background-color: #1a1a1a;
             color: #ffffff;
             font-family: inherit;
-            font-weight: 800; /* Bold font */
+            font-weight: 800; 
             font-size: 16px;
             text-align: center;
             box-sizing: border-box;
             transition: border-color 0.3s ease, background-color 0.3s ease;
-            
-            /* Ensures user can click and type inside */
             user-select: auto;
             -webkit-user-select: auto;
             cursor: none !important; 
@@ -202,13 +244,11 @@
             font-weight: 600;
         }
 
-        /* --- Custom Bouncy Cursor Mascot --- */
+        /* Custom Bouncy Cursor Mascot */
         .custom-cursor {
             position: fixed;
-            top: 0; 
-            left: 0;
-            width: 40px;
-            height: 40px;
+            top: 0; left: 0;
+            width: 40px; height: 40px;
             pointer-events: none; 
             z-index: 9999;
             transform-origin: top left; 
@@ -233,6 +273,12 @@
     </div>
 
     <div class="main-wrapper">
+        
+        <!-- NEW: Left Factory Conveyor Belt -->
+        <div class="left-panel" id="left-panel">
+            <!-- Items injected by JS -->
+        </div>
+
         <div class="scene">
             <div class="card" id="upload-card" title="Left Click to Upload | Right Click & Drag to Rotate">
                 <div class="plus-icon" id="plus-icon">+</div>
@@ -244,7 +290,7 @@
         <div class="right-panel" id="right-panel">
             <div class="right-panel-content">
                 <div class="type-prompt">Rotate To Load</div>
-                <div class="bar-container">
+                <div class="bar-container" id="loading-bar-container">
                     <div class="bar-fill" id="loading-bar-fill"></div>
                 </div>
                 <!-- Interactive Typing Element -->
@@ -263,31 +309,43 @@
         const glare = document.getElementById('glare');
         const cursor = document.getElementById('cursor');
         
-        // Right panel variables
         const rightPanel = document.getElementById('right-panel');
+        const leftPanel = document.getElementById('left-panel');
+        const barContainer = document.getElementById('loading-bar-container');
         const loadingBarFill = document.getElementById('loading-bar-fill');
         const textInput = document.getElementById('curvy-text-input');
 
-        // --- 1. Custom Cursor Spring Physics ---
+        // Shapes for conveyor belt (Circle, Triangle, Hexagon, Star-ish, Pentagon)
+        const clipShapes = [
+            'circle(50% at 50% 50%)',
+            'polygon(50% 0%, 0% 100%, 100% 100%)',
+            'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+            'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+            'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'
+        ];
+
+        // --- Color Logic (Always Max Saturation: 100%, 50% Lightness) ---
+        function getMaxSaturationColor() {
+            return `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+        }
+
+        let currentBarColor = getMaxSaturationColor();
+        let prevBarColor = '#2a2a2a'; // Starts default dark grey
+
+        // --- 1. Custom Cursor Physics ---
         let mouseX = 0, mouseY = 0;
         let cursorX = 0, cursorY = 0;
         let cursorVX = 0, cursorVY = 0;
         const stiffness = 0.12; 
         const damping = 0.65;   
 
-        window.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
+        window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
         document.addEventListener('mouseleave', () => cursor.style.opacity = '0');
         document.addEventListener('mouseenter', () => cursor.style.opacity = '1');
 
-        // --- 2. Card Image Upload Logic ---
+        // --- 2. Card Image Upload & Conveyor Logic ---
         card.addEventListener('click', (e) => {
-            if (e.button === 0) {
-                fileInput.click();
-            }
+            if (e.button === 0) fileInput.click();
         });
 
         fileInput.addEventListener('change', (event) => {
@@ -295,141 +353,139 @@
             if (file && file.type === 'image/png') {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    card.style.backgroundImage = `url('${e.target.result}')`;
+                    const imgSrc = e.target.result;
+                    card.style.backgroundImage = `url('${imgSrc}')`;
                     plusIcon.style.display = 'none';
                     card.classList.add('has-image');
                     
-                    // --- Activate/Update Right UI ---
+                    // Activate Panels
                     rightPanel.classList.add('active');
+                    leftPanel.classList.add('active');
                     
-                    // Reset Logic on every new PNG
+                    // Reset Bar Logic
                     totalRotation = 0;
                     loadingBarFill.style.width = '0%';
                     textInput.value = '';
                     
-                    // Generate a totally random RGB
-                    const r = Math.floor(Math.random() * 256);
-                    const g = Math.floor(Math.random() * 256);
-                    const b = Math.floor(Math.random() * 256);
-                    loadingBarFill.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    // Assign Initial Max Saturation Color & Glow
+                    currentBarColor = getMaxSaturationColor();
+                    prevBarColor = '#2a2a2a'; 
+                    barContainer.style.backgroundColor = prevBarColor;
+                    loadingBarFill.style.backgroundColor = currentBarColor;
+                    loadingBarFill.style.boxShadow = `0 0 15px ${currentBarColor}`;
+
+                    // Build Conveyor Belt Items
+                    leftPanel.innerHTML = ''; // Clear old ones
+                    for(let i = 0; i < 6; i++) {
+                        let item = document.createElement('div');
+                        item.className = 'conveyor-item';
+                        item.style.backgroundImage = `url('${imgSrc}')`;
+                        item.style.clipPath = clipShapes[Math.floor(Math.random() * clipShapes.length)];
+                        // Spread out over the 8s animation length evenly
+                        item.style.animationDelay = `-${i * (8/6)}s`;
+                        // Random extreme crop
+                        item.style.backgroundPosition = `${Math.random()*100}% ${Math.random()*100}%`;
+                        leftPanel.appendChild(item);
+                    }
                 };
                 reader.readAsDataURL(file);
-            } else if (file) {
-                alert("Please select a valid PNG file!");
             }
             fileInput.value = '';
         });
 
-        // --- 3. 3D Interaction Engine ---
-        let isHovering = false;
+        // --- 3. 3D Interaction Engine (Clear X/Y Mapping) ---
         let isDragging = false;
-        let hasDragged = false; // Tracks if user has ever interacted
-        
-        let currentRX = 0, currentRY = 0, currentRZ = 0;
-        let targetRX = 0, targetRY = 0, targetRZ = 0;
+        let currentRX = 0, currentRY = 0;
+        let targetRX = 0, targetRY = 0;
         let lastRX = 0, lastRY = 0;
         
         let dragStartX = 0, dragStartY = 0;
-        let dragStartRX = 0, dragStartRY = 0, dragStartRZ = 0;
-        
-        let hoverTime = 0; 
-        let totalRotation = 0; // Tracks cummulative dragging
+        let dragStartRX = 0, dragStartRY = 0;
+        let totalRotation = 0; 
 
         window.addEventListener('contextmenu', e => e.preventDefault());
 
-        card.addEventListener('mouseenter', () => isHovering = true);
-        card.addEventListener('mouseleave', () => isHovering = false);
-
-        // Start Right Click Drag
         window.addEventListener('mousedown', (e) => {
             if (e.button === 2) { 
                 isDragging = true;
-                hasDragged = true; // Permanently disables auto-hover rotation snapping
                 dragStartX = e.clientX;
                 dragStartY = e.clientY;
-                
+                // Lock exact starting angle
                 dragStartRX = currentRX;
                 dragStartRY = currentRY;
-                dragStartRZ = currentRZ;
-                
                 cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) scale(0.8)`; 
             }
         });
 
-        // End Right Click Drag
         window.addEventListener('mouseup', (e) => {
             if (e.button === 2) {
                 isDragging = false;
+                // NEW: Triggers the return to original place
             }
         });
 
         // --- 4. Main Animation Loop ---
         function animate() {
-            // -- Cursor Physics --
-            let ax = (mouseX - cursorX) * stiffness;
-            let ay = (mouseY - cursorY) * stiffness;
-            cursorVX += ax;
-            cursorVY += ay;
-            cursorVX *= damping;
-            cursorVY *= damping;
-            cursorX += cursorVX;
-            cursorY += cursorVY;
+            // Cursor physics
+            cursorVX += (mouseX - cursorX) * stiffness;
+            cursorVY += (mouseY - cursorY) * stiffness;
+            cursorVX *= damping; cursorVY *= damping;
+            cursorX += cursorVX; cursorY += cursorVY;
             
-            if (!isDragging) {
-                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
-            } else {
-                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) scale(0.8)`;
-            }
+            cursor.style.transform = isDragging 
+                ? `translate(${cursorX}px, ${cursorY}px) scale(0.8)`
+                : `translate(${cursorX}px, ${cursorY}px)`;
 
-            // -- Card 3D Physics --
+            // Card 3D Physics (Straightforward clear mapping)
             if (isDragging) {
                 let deltaX = mouseX - dragStartX;
                 let deltaY = mouseY - dragStartY;
                 
-                // Enhanced Steering: Higher multiplier reduces sluggish resistance
-                targetRY = dragStartRY + deltaX * 0.8;
-                targetRX = dragStartRX - deltaY * 0.8;
-                targetRZ = dragStartRZ - (deltaX * 0.15) - (deltaY * 0.15); 
-
+                // Clear direct 1:1 feel, Z removed completely
+                targetRY = dragStartRY + deltaX * 0.6;
+                targetRX = dragStartRX - deltaY * 0.6;
                 card.style.boxShadow = `0 45px 80px rgba(0, 0, 0, 0.3)`;
-            } 
-            else if (isHovering && !hasDragged) {
-                // Initial life animation (Only runs BEFORE you touch it)
-                hoverTime += 0.02;
-                targetRX = Math.sin(hoverTime) * 15;
-                targetRY = Math.cos(hoverTime * 1.2) * 18;
-                targetRZ = Math.sin(hoverTime * 0.8) * 5;
-                card.style.boxShadow = `0 30px 50px rgba(0, 0, 0, 0.2)`;
-            } 
-            else {
-                // If the user has dragged and released, DO NOT snap targets to 0! 
-                // They stay anchored to exactly where they were left.
+            } else {
+                // Returns to original place perfectly
+                targetRX = 0;
+                targetRY = 0;
                 card.style.boxShadow = `0 20px 40px rgba(0, 0, 0, 0.15)`;
             }
 
-            // Enhanced Steering Lerp: 0.25 (Catch up faster, feels far more responsive)
-            currentRX += (targetRX - currentRX) * 0.25;
-            currentRY += (targetRY - currentRY) * 0.25;
-            currentRZ += (targetRZ - currentRZ) * 0.25;
+            // Lerp catch-up
+            currentRX += (targetRX - currentRX) * 0.2;
+            currentRY += (targetRY - currentRY) * 0.2;
 
-            // Apply transforms
-            card.style.transform = `rotateX(${currentRX}deg) rotateY(${currentRY}deg) rotateZ(${currentRZ}deg)`;
+            card.style.transform = `rotateX(${currentRX}deg) rotateY(${currentRY}deg)`;
 
-            // -- Glare Mapping --
+            // Glare Mapping
             let bgX = 50 - (currentRY * 1.5);
             let bgY = 50 - (currentRX * 1.5);
             bgX = Math.max(-50, Math.min(150, bgX));
             bgY = Math.max(-50, Math.min(150, bgY));
             glare.style.backgroundPosition = `${bgX}% ${bgY}%`;
 
-            // -- Loading Bar Calculation --
-            // Adds up physical distance rotated to continuously push the loading bar
+            // Loading Bar Logic
             if (rightPanel.classList.contains('active')) {
                 let frameDiff = Math.abs(currentRX - lastRX) + Math.abs(currentRY - lastRY);
                 totalRotation += frameDiff;
                 
-                // Maps 1000 total cumulative degree-ticks into 100% width
-                let fillPercent = Math.min(100, (totalRotation / 1000) * 100);
+                let fillPercent = (totalRotation / 800) * 100;
+
+                // When filled fully, overlap mechanic
+                if (fillPercent >= 100) {
+                    totalRotation = totalRotation % 800; // Keep overflow remainder
+                    fillPercent = (totalRotation / 800) * 100;
+                    
+                    // Container takes old bright color, bar gets a new one!
+                    prevBarColor = currentBarColor;
+                    currentBarColor = getMaxSaturationColor();
+                    
+                    barContainer.style.backgroundColor = prevBarColor;
+                    loadingBarFill.style.backgroundColor = currentBarColor;
+                    loadingBarFill.style.boxShadow = `0 0 15px ${currentBarColor}`;
+                }
+
                 loadingBarFill.style.width = fillPercent + '%';
             }
 
