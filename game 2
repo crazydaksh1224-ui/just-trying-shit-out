@@ -1,114 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Cozy Bakery Pro</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cozy Bakery+</title>
 <style>
-* {
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: "Nunito", sans-serif;
-}
+  :root{
+    --bg:#ffffff;
+    --card:#ffffff;
+    --ink:#1f1f1f;
+    --muted:#666;
+    --shadow:0 12px 30px rgba(0,0,0,.08);
+    --shadow2:0 20px 45px rgba(0,0,0,.12);
+    --soft:24px;
+  }
 
-body {
-  background:#fff;
-  overflow:hidden;
-  cursor:none; /* HIDE REAL CURSOR */
-}
+  *{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
 
-/* CUSTOM CURSOR */
-.cursor {
-  position:fixed;
-  width:50px;
-  height:50px;
-  border-radius:18px;
-  background:#f3f3f3;
-  pointer-events:none;
-  transform:translate(-50%,-50%);
-  z-index:999;
-}
+  html,body{
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    overflow:hidden;
+    cursor:none;
+  }
 
-/* GAME */
-.game {
-  width:360px;
-  margin:auto;
-  margin-top:40px;
-}
+  body, body *{
+    cursor:none !important;
+  }
 
-.header {
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:20px;
-}
+  .game{
+    width:min(92vw, 420px);
+    margin:36px auto 0;
+    user-select:none;
+    perspective:1000px;
+  }
 
-.box {
-  padding:10px 15px;
-  border-radius:20px;
-  background:white;
-  box-shadow:0 4px 10px rgba(0,0,0,0.08);
-}
+  .header{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
 
-/* GRID */
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:15px;
-}
+  .box{
+    flex:1;
+    padding:12px 16px;
+    border-radius:999px;
+    background:#fff;
+    box-shadow:var(--shadow);
+    color:var(--ink);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.2px;
+    text-align:center;
+  }
 
-/* CARD */
-.card {
-  height:120px;
-  border-radius:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:30px;
-  background:white;
-  box-shadow:0 10px 20px rgba(0,0,0,0.1);
-  transition:box-shadow 0.3s;
-  transform-style:preserve-3d;
-}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+  }
 
-/* FEEDBACK */
-.correct { animation:pop 0.3s; }
-.wrong { animation:shake 0.3s; }
+  .card{
+    height:128px;
+    border-radius:26px;
+    background:var(--card);
+    box-shadow:var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:
+      transform .22s cubic-bezier(.2,.9,.2,1),
+      box-shadow .22s ease,
+      scale .22s ease;
+    will-change:transform;
+    user-select:none;
+  }
 
-@keyframes pop {
-  50% { transform:scale(1.1); }
-}
+  .card:hover{
+    box-shadow:var(--shadow2);
+  }
 
-@keyframes shake {
-  25% { transform:translateX(-4px); }
-  75% { transform:translateX(4px); }
-}
+  .card.correct{
+    animation:pop .38s ease;
+  }
 
-/* FACT PANEL */
-.fact {
-  position:fixed;
-  bottom:-10px;
-  right:0;
-  width:100%;
-  height:50vh;
-  background:white;
-  border-radius:30px 30px 0 0;
-  box-shadow:0 -10px 40px rgba(0,0,0,0.2);
-  padding:30px;
-  font-size:20px;
-  font-weight:bold;
-  line-height:1.5;
-  animation:slideUp 0.4s ease;
-}
+  .card.wrong{
+    animation:shake .34s ease;
+  }
 
-@keyframes slideUp {
-  from { transform:translateY(100%); }
-  to { transform:translateY(0); }
-}
+  @keyframes pop{
+    0%{ transform:scale(1); }
+    50%{ transform:scale(1.12); }
+    100%{ transform:scale(1); }
+  }
 
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-4px); }
+    75%{ transform:translateX(4px); }
+  }
+
+  .fact{
+    position:fixed;
+    right:18px;
+    bottom:-8vh;
+    width:min(82vw, 540px);
+    height:50vh;
+    border-radius:34px 34px 26px 26px;
+    background:#fff;
+    box-shadow:0 25px 60px rgba(0,0,0,.18);
+    padding:24px 26px 30px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:18px;
+    overflow:hidden;
+    animation:slideUp .34s cubic-bezier(.18,.9,.22,1);
+    z-index:50;
+  }
+
+  .fact .label{
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.18em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  .fact .text{
+    font-family:"Trebuchet MS","Comic Sans MS","Segoe UI",sans-serif;
+    font-size:clamp(28px, 4vw, 48px);
+    line-height:1.08;
+    font-weight:900;
+    color:var(--ink);
+    letter-spacing:-0.04em;
+    word-break:break-word;
+  }
+
+  .fact .item{
+    font-size:clamp(24px, 3vw, 34px);
+    font-weight:900;
+    letter-spacing:-0.03em;
+    margin-top:auto;
+  }
+
+  @keyframes slideUp{
+    from{
+      transform:translateY(80px);
+      opacity:0;
+    }
+    to{
+      transform:translateY(0);
+      opacity:1;
+    }
+  }
+
+  .cursor{
+    position:fixed;
+    left:0;
+    top:0;
+    width:44px;
+    height:44px;
+    border-radius:18px;
+    background:rgba(245,245,245,.95);
+    box-shadow:0 10px 28px rgba(0,0,0,.12);
+    pointer-events:none;
+    transform:translate(-50%,-50%);
+    z-index:999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .14s cubic-bezier(.18,.9,.22,1);
+    will-change:transform,left,top;
+    overflow:hidden;
+  }
+
+  .cursor::before{
+    content:"";
+    width:16px;
+    height:16px;
+    border-radius:6px 12px 12px 6px;
+    border:3px solid rgba(50,50,50,.55);
+    border-left-color:transparent;
+    border-top-color:transparent;
+    transform:rotate(-45deg) translateX(-1px);
+    display:block;
+  }
+
+  .cursor.bounce{
+    transition:transform .24s cubic-bezier(.16,1.35,.32,1);
+  }
+
+  .hint{
+    position:fixed;
+    left:16px;
+    bottom:16px;
+    font-size:12px;
+    color:#8b8b8b;
+    background:rgba(255,255,255,.7);
+    backdrop-filter:blur(8px);
+    padding:8px 12px;
+    border-radius:999px;
+    box-shadow:var(--shadow);
+    z-index:5;
+  }
 </style>
 </head>
-
 <body>
 
 <div class="cursor" id="cursor"></div>
@@ -118,122 +225,161 @@ body {
     <div class="box">Score: <span id="score">0</span></div>
     <div class="box">Level: <span id="level">1</span></div>
   </div>
-
   <div class="grid" id="grid"></div>
 </div>
 
+<div class="hint">Left click to score • Right click for fact</div>
+
 <script>
+  let score = 0;
+  let level = 1;
+  const items = ["🍞","🥐","🧁","🍩","🍪","🍰"];
+  const facts = {
+    "🍞":"Bread is one of the oldest prepared foods in human history.",
+    "🥐":"The croissant became a bakery icon far beyond its origin story.",
+    "🧁":"Cupcakes became popular because they were easy to portion and serve.",
+    "🍩":"Doughnuts became famous as a sweet, shareable comfort snack.",
+    "🍪":"Cookies became a bakery favorite because they are simple and versatile.",
+    "🍰":"Cake is often associated with celebration, making it feel instantly cozy."
+  };
 
-/* DATA */
-let score = 0;
-let level = 1;
-
-const items = ["🍞","🥐","🧁","🍩","🍪","🍰"];
-
-const facts = {
-  "🍞":"Bread is one of the oldest prepared foods in human history.",
-  "🥐":"Croissants were inspired by Austrian pastries, not France originally.",
-  "🧁":"Cupcakes were called 'number cakes' due to easy measurement.",
-  "🍩":"Doughnuts were popularized by Dutch settlers in America.",
-  "🍪":"Cookies started as small test cakes for oven temperature.",
-  "🍰":"Cakes evolved from bread with added honey and nuts."
-};
-
-/* GRID */
-function generateGrid() {
   const grid = document.getElementById("grid");
-  grid.innerHTML = "";
+  const cursor = document.getElementById("cursor");
+  const scoreEl = document.getElementById("score");
+  const levelEl = document.getElementById("level");
 
-  let count = level + 3;
-  let arr = items.slice(0,count);
-  let target = arr[Math.floor(Math.random()*arr.length)];
-  window.target = target;
+  let target = "";
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let curX = mouseX;
+  let curY = mouseY;
+  let isAnimatingCursor = false;
 
-  arr.forEach(item=>{
-    let card = document.createElement("div");
-    card.className = "card";
-    card.innerText = item;
-
-    card.onclick = ()=>clickCard(card,item);
-    card.oncontextmenu = (e)=>{
-      e.preventDefault();
-      showFact(item);
-    };
-
-    grid.appendChild(card);
-  });
-}
-
-/* CLICK */
-function clickCard(el,item) {
-  if(item === target){
-    score += 10;
-    el.classList.add("correct");
-  } else {
-    score -= 2;
-    el.classList.add("wrong");
+  function updateUI() {
+    scoreEl.textContent = score;
+    levelEl.textContent = level;
   }
 
-  document.getElementById("score").innerText = score;
+  function generateGrid() {
+    grid.innerHTML = "";
 
-  setTimeout(generateGrid,400);
-}
+    const count = Math.min(level + 3, items.length);
+    const arr = items.slice(0, count);
+    target = arr[Math.floor(Math.random() * arr.length)];
 
-/* FACT PANEL */
-function showFact(item) {
-  let old = document.querySelector(".fact");
-  if(old) old.remove();
+    arr.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.textContent = item;
 
-  let div = document.createElement("div");
-  div.className = "fact";
-  div.innerText = facts[item];
+      card.addEventListener("click", () => {
+        if (item === target) {
+          score += 10;
+          card.classList.add("correct");
+          setTimeout(() => card.classList.remove("correct"), 380);
+        } else {
+          score = Math.max(0, score - 2);
+          card.classList.add("wrong");
+          setTimeout(() => card.classList.remove("wrong"), 340);
+        }
+        updateUI();
+        setTimeout(generateGrid, 420);
+      });
 
-  document.body.appendChild(div);
+      card.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        showFact(item);
+      });
 
-  setTimeout(()=>div.remove(),4000);
-}
+      grid.appendChild(card);
+    });
+  }
 
-/* STABLE 3D ROTATION */
-document.addEventListener("mousemove",(e)=>{
-  document.querySelectorAll(".card").forEach(card=>{
-    let rect = card.getBoundingClientRect();
+  function showFact(item) {
+    const old = document.querySelector(".fact");
+    if (old) old.remove();
 
-    let x = (e.clientX - rect.left) / rect.width - 0.5;
-    let y = (e.clientY - rect.top) / rect.height - 0.5;
-
-    card.style.transform = `
-      rotateY(${x*8}deg)
-      rotateX(${-y*8}deg)
+    const fact = document.createElement("div");
+    fact.className = "fact";
+    fact.innerHTML = `
+      <div class="label">Random Cozy Fact</div>
+      <div class="text">${facts[item] || "This item feels cozy, soft, and bakery-perfect."}</div>
+      <div class="item">${item}</div>
     `;
+
+    document.body.appendChild(fact);
+
+    setTimeout(() => {
+      fact.style.transition = "transform .28s ease, opacity .28s ease";
+      fact.style.transform = "translateY(40px)";
+      fact.style.opacity = "0";
+      setTimeout(() => fact.remove(), 280);
+    }, 3200);
+  }
+
+  function rotateCardsTowardMouse() {
+    const cards = document.querySelectorAll(".card");
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = (mouseX - cx) / rect.width;
+      const dy = (mouseY - cy) / rect.height;
+
+      const maxTilt = 7;
+      const rotY = Math.max(-maxTilt, Math.min(maxTilt, dx * 10));
+      const rotX = Math.max(-maxTilt, Math.min(maxTilt, -dy * 10));
+
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(0)`;
+    });
+
+    requestAnimationFrame(rotateCardsTowardMouse);
+  }
+
+  function animateCursor() {
+    const dx = mouseX - curX;
+    const dy = mouseY - curY;
+
+    curX += dx * 0.14;
+    curY += dy * 0.14;
+
+    cursor.style.left = curX + "px";
+    cursor.style.top = curY + "px";
+
+    const speed = Math.sqrt(dx * dx + dy * dy);
+    const scale = 1 + Math.min(speed / 500, 0.14);
+
+    cursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    requestAnimationFrame(animateCursor);
+  }
+
+  document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    cursor.classList.add("bounce");
+    clearTimeout(window.__cursorBounce);
+    window.__cursorBounce = setTimeout(() => cursor.classList.remove("bounce"), 120);
   });
-});
 
-/* SMOOTH CURSOR WITH BOUNCE */
-const cursor = document.getElementById("cursor");
+  document.addEventListener("mouseleave", () => {
+    cursor.style.opacity = "0";
+  });
 
-let x = 0, y = 0;
-let tx = 0, ty = 0;
+  document.addEventListener("mouseenter", () => {
+    cursor.style.opacity = "1";
+  });
 
-document.addEventListener("mousemove",(e)=>{
-  tx = e.clientX;
-  ty = e.clientY;
-});
+  window.addEventListener("resize", () => {
+    mouseX = window.innerWidth / 2;
+    mouseY = window.innerHeight / 2;
+  });
 
-function animateCursor(){
-  x += (tx - x) * 0.2;
-  y += (ty - y) * 0.2;
-
-  cursor.style.left = x + "px";
-  cursor.style.top = y + "px";
-
-  requestAnimationFrame(animateCursor);
-}
-
-animateCursor();
-
-/* INIT */
-generateGrid();
-
+  updateUI();
+  generateGrid();
+  rotateCardsTowardMouse();
+  animateCursor();
 </script>
 
 </body>
