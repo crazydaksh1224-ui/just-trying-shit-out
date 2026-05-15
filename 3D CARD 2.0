@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Perspective Anime Reflective Card</title>
+    <style>
+        /* --- Global Setup --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: #ffffff; /* Pure white background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; 
+            
+            /* Hides the default computer cursor so we can use our custom bouncy one */
+            cursor: none !important; 
+            user-select: none; /* Prevents accidental text selection while dragging */
+        }
+
+        /* --- 3D Scene Wrapper --- */
+        .scene {
+            perspective: 1200px;
+            padding: 100px; 
+            z-index: 10;
+        }
+
+        /* --- The Card --- */
+        .card {
+            width: 280px;
+            height: 400px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            
+            /* Softer shadow for the pure white background */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15); 
+            border: 1px solid #e0e0e0; 
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden; 
+            
+            /* We removed CSS transitions/animations because the Javascript Physics Engine handles it now! */
+            transform-style: preserve-3d;
+            
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* --- State when PNG is added --- */
+        .card.has-image {
+            background-color: transparent; 
+            border: none;
+            background-size: 100% 100%; 
+        }
+
+        /* --- The Plus Icon --- */
+        .plus-icon {
+            font-size: 72px;
+            font-weight: 300;
+            color: #cccccc;
+            transition: color 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* --- Flat Anime-Style Rectangle Glare --- */
+        .glare {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            
+            background: linear-gradient(
+                105deg,
+                transparent 0%,
+                transparent 42%,
+                rgba(255, 255, 255, 0.15) 42%, /* Sharp edge start */
+                rgba(255, 255, 255, 0.15) 55%, /* Sharp edge end */
+                transparent 55%,
+                transparent 100%
+            );
+            background-size: 250% 250%;
+            background-position: 50% 50%;
+            opacity: 0;
+            pointer-events: none; 
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .card.has-image .glare {
+            opacity: 1; 
+        }
+
+        /* --- Custom Bouncy Cursor Mascot --- */
+        .custom-cursor {
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 40px;
+            height: 40px;
+            pointer-events: none; /* Crucial so it doesn't block clicks */
+            z-index: 9999;
+            /* Anchors the SVG exactly to the real invisible mouse tip */
+            transform-origin: top left; 
+            transition: opacity 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Our Custom Mascot Cursor (2x bigger, curvy white arrow with soft shadow) -->
+    <div class="custom-cursor" id="cursor">
+        <svg width="44" height="44" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g filter="url(#drop-shadow)">
+                <path d="M2 2 L22 9 L13 13 L9 22 Z" fill="white" stroke="#2b2b2b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            </g>
+            <defs>
+                <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="1" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
+                </filter>
+            </defs>
+        </svg>
+    </div>
+
+    <div class="scene">
+        <div class="card" id="upload-card" title="Left Click to Upload | Right Click & Drag to Rotate">
+            <div class="plus-icon" id="plus-icon">+</div>
+            <div class="glare" id="glare"></div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="file-input" accept=".png, image/png" style="display: none;">
+
+    <script>
+        const card = document.getElementById('upload-card');
+        const fileInput = document.getElementById('file-input');
+        const plusIcon = document.getElementById('plus-icon');
+        const glare = document.getElementById('glare');
+        const cursor = document.getElementById('cursor');
+
+        // --- 1. Custom Cursor Spring Physics ---
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        let cursorVX = 0, cursorVY = 0;
+        const stiffness = 0.12; // Controls how tightly it follows
+        const damping = 0.65;   // Controls the bounciness/friction
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Hide cursor when leaving the window
+        document.addEventListener('mouseleave', () => cursor.style.opacity = '0');
+        document.addEventListener('mouseenter', () => cursor.style.opacity = '1');
+
+        // --- 2. Card Image Upload Logic ---
+        card.addEventListener('click', (e) => {
+            // Only trigger upload on Left Click (button 0)
+            if (e.button === 0) {
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'image/png') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    card.style.backgroundImage = `url('${e.target.result}')`;
+                    plusIcon.style.display = 'none';
+                    card.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            } else if (file) {
+                alert("Please select a valid PNG file!");
+            }
+            fileInput.value = '';
+        });
+
+        // --- 3. 3D Interaction Engine ---
+        let isHovering = false;
+        let isDragging = false;
+        
+        // Current actual rotations
+        let currentRX = 0, currentRY = 0, currentRZ = 0;
+        // Target rotations we want to animate towards
+        let targetRX = 0, targetRY = 0, targetRZ = 0;
+        
+        // Drag state variables
+        let dragStartX = 0, dragStartY = 0;
+        let dragStartRX = 0, dragStartRY = 0, dragStartRZ = 0;
+        
+        let hoverTime = 0; // Drives the automatic 3D looping animation
+
+        // Prevent the right-click menu from popping up
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        card.addEventListener('mouseenter', () => isHovering = true);
+        card.addEventListener('mouseleave', () => isHovering = false);
+
+        // Start Right Click Drag
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 2) { // Right Click
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                
+                // Lock the targets to exactly where the card currently is!
+                dragStartRX = currentRX;
+                dragStartRY = currentRY;
+                dragStartRZ = currentRZ;
+                
+                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) scale(0.8)`; // Small click squeeze
+            }
+        });
+
+        // End Right Click Drag
+        window.addEventListener('mouseup', (e) => {
+            if (e.button === 2) {
+                isDragging = false;
+            }
+        });
+
+        // --- 4. Main Animation Loop ---
+        function animate() {
+            // -- Cursor Physics --
+            let ax = (mouseX - cursorX) * stiffness;
+            let ay = (mouseY - cursorY) * stiffness;
+            cursorVX += ax;
+            cursorVY += ay;
+            cursorVX *= damping;
+            cursorVY *= damping;
+            cursorX += cursorVX;
+            cursorY += cursorVY;
+            
+            // Apply cursor position
+            if (!isDragging) {
+                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+            } else {
+                cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) scale(0.8)`;
+            }
+
+            // -- Card 3D Physics --
+            if (isDragging) {
+                // Manual 3 Axis Rotation (X, Y, and a calculated Trackball Z)
+                let deltaX = mouseX - dragStartX;
+                let deltaY = mouseY - dragStartY;
+                
+                targetRY = dragStartRY + deltaX * 0.4;
+                targetRX = dragStartRX - deltaY * 0.4;
+                targetRZ = dragStartRZ - (deltaX * 0.1) - (deltaY * 0.1); 
+
+                // Deepen shadow while holding
+                card.style.boxShadow = `0 35px 60px rgba(0, 0, 0, 0.25)`;
+            } 
+            else if (isHovering) {
+                // The Hover Time only increments when NOT dragging. 
+                // This guarantees the animation "pauses" seamlessly when right-clicking.
+                hoverTime += 0.02;
+                
+                // Smooth continuous math-based looping through 3 perspectives
+                targetRX = Math.sin(hoverTime) * 15;
+                targetRY = Math.cos(hoverTime * 1.2) * 18;
+                targetRZ = Math.sin(hoverTime * 0.8) * 5;
+                
+                card.style.boxShadow = `0 30px 50px rgba(0, 0, 0, 0.2)`;
+            } 
+            else {
+                // Snaps back to flat when mouse leaves
+                targetRX = 0;
+                targetRY = 0;
+                targetRZ = 0;
+                card.style.boxShadow = `0 15px 35px rgba(0, 0, 0, 0.15)`;
+            }
+
+            // Lerp (Smoothly interpolate) current rotation towards target rotation
+            currentRX += (targetRX - currentRX) * 0.08;
+            currentRY += (targetRY - currentRY) * 0.08;
+            currentRZ += (targetRZ - currentRZ) * 0.08;
+
+            // Apply the 3D transforms
+            card.style.transform = `rotateX(${currentRX}deg) rotateY(${currentRY}deg) rotateZ(${currentRZ}deg)`;
+
+            // -- Dynamic Glare Positioning --
+            // Maps the glare strictly to the actual physical rotation of the card!
+            let bgX = 50 - (currentRY * 1.5);
+            let bgY = 50 - (currentRX * 1.5);
+            
+            // Keeps the glare contained within boundaries
+            bgX = Math.max(-50, Math.min(150, bgX));
+            bgY = Math.max(-50, Math.min(150, bgY));
+            
+            glare.style.backgroundPosition = `${bgX}% ${bgY}%`;
+
+            // Loop the engine
+            requestAnimationFrame(animate);
+        }
+
+        // Start engine
+        animate();
+    </script>
+</body>
+</html>
