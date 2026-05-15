@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Perspective Imprint Card</title>
+    <style>
+        /* --- Global Setup for Notion Embed --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            /* Transparent background so it blends seamlessly into your Notion page */
+            background-color: transparent; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- 3D Scene Wrapper --- */
+        .scene {
+            perspective: 1200px; /* Gives the depth required for the 3D effect */
+        }
+
+        /* --- The Blank White Card --- */
+        .card {
+            width: 280px;
+            height: 400px;
+            background-color: #ffffff;
+            border-radius: 20px; /* Little curved corners */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); /* Soft shadow to pop off the page */
+            border: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            
+            /* Smoothly returns to flat when the mouse leaves */
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s ease;
+            transform-style: preserve-3d;
+            
+            /* Setup for when the image is uploaded */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* --- The Plus Icon --- */
+        .plus-icon {
+            font-size: 72px;
+            font-weight: 300;
+            color: #d4d4d4;
+            transition: color 0.3s ease, transform 0.3s ease;
+            pointer-events: none; /* Prevents the icon from interfering with the click */
+        }
+
+        .card:hover .plus-icon {
+            color: #a0a0a0;
+            transform: scale(1.1);
+        }
+
+        /* --- Hover State & 3D Animation --- */
+        .card:hover {
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            /* Triggers the continuous 3D loop */
+            animation: warp3d 5s ease-in-out infinite;
+        }
+
+        /* Keyframes for the 3 Continuous Warp Perspectives */
+        @keyframes warp3d {
+            0%   { transform: rotateX(0deg) rotateY(0deg); } /* Catch point for smooth hover entry */
+            20%  { transform: rotateX(15deg) rotateY(-15deg); } /* Angle 1: Tilted Top-Left */
+            50%  { transform: rotateX(-12deg) rotateY(18deg); } /* Angle 2: Tilted Bottom-Right */
+            80%  { transform: rotateX(15deg) rotateY(12deg); }  /* Angle 3: Tilted Top-Right */
+            100% { transform: rotateX(0deg) rotateY(0deg); }    /* Loop point */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <!-- The Card -->
+        <div class="card" id="upload-card" title="Click to upload a PNG">
+            <div class="plus-icon" id="plus-icon">+</div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input (Only accepts PNGs) -->
+    <input type="file" id="file-input" accept=".png, image/png" style="display: none;">
+
+    <script>
+        const card = document.getElementById('upload-card');
+        const fileInput = document.getElementById('file-input');
+        const plusIcon = document.getElementById('plus-icon');
+
+        // 1. When the card is clicked, trigger the hidden file input
+        card.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 2. Handle the file once the user selects it
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            
+            if (file) {
+                // Double check that it's a PNG file
+                if (file.type === 'image/png') {
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        // Imprint the uploaded PNG onto the card as the background
+                        card.style.backgroundImage = `url('${e.target.result}')`;
+                        
+                        // Hide the plus icon now that the image is there
+                        plusIcon.style.display = 'none';
+                    };
+                    
+                    // Read the file data
+                    reader.readAsDataURL(file);
+                } else {
+                    alert("Please select a valid PNG file!");
+                }
+                
+                // Reset the input in case you want to click and upload a different image later
+                fileInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
