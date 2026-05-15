@@ -2,164 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flashcard Stacker</title>
     <style>
-        :root {
-            --bg-color: #ffffff;
-            --card-width: 150px;
-            --card-height: 220px;
-        }
-
+        /* Base Styling */
         body {
-            background-color: var(--bg-color);
+            background-color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             align-items: center;
-            padding: 50px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px;
             overflow-x: auto;
         }
 
-        #container {
+        #app-container {
             display: flex;
             gap: 20px;
-            perspective: 1000px;
             align-items: center;
+            perspective: 1200px; /* Crucial for the 3D effect */
         }
 
-        /* The Interactive Blank Card */
-        .main-card {
-            width: var(--card-width);
-            height: var(--card-height);
-            background: #000;
-            border-radius: 12px;
+        /* The Blank Interactive Card */
+        .trigger-card {
+            width: 160px;
+            height: 240px;
+            background-color: #000000;
+            border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease-out;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             flex-shrink: 0;
         }
 
-        .main-card::before {
+        .trigger-card::after {
             content: "+";
             color: white;
-            font-size: 3rem;
-            font-weight: 200;
+            font-size: 4rem;
+            font-weight: 100;
+            z-index: 2;
         }
 
-        /* The Rectangular Glare */
+        /* 3D Glare Effect */
         .glare {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.15) 45%,
-                rgba(255, 255, 255, 0.25) 50%,
-                rgba(255, 255, 255, 0.15) 55%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            border-radius: 12px;
+            border-radius: 16px;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
+            z-index: 3;
+            /* Initial gradient, will be moved by JS */
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 60%);
         }
 
-        .main-card:hover .glare {
+        .trigger-card:hover .glare {
             opacity: 1;
         }
 
-        /* Stacked Cards */
+        /* The Stacked Cards Container */
+        #card-stack {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Generated Cards */
         .stacked-card {
-            width: var(--card-width);
-            height: var(--card-height);
-            background: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
+            width: 160px;
+            height: 240px;
+            background-color: #f0f0f0;
+            border-radius: 16px;
             background-size: cover;
             background-position: center;
-            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             flex-shrink: 0;
+            opacity: 0;
+            transform: scale(0.8) translateX(-20px);
         }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-50px) scale(0.8); }
-            to { opacity: 1; transform: translateX(0) scale(1); }
+        /* Animation for newly added cards */
+        @keyframes popIn {
+            to {
+                opacity: 1;
+                transform: scale(1) translateX(0);
+            }
         }
 
-        #fileInput { display: none; }
+        /* Hide the default file input */
+        #image-upload {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <div id="container">
-        <!-- The Interactive Controller Card -->
-        <div class="main-card" id="triggerCard">
-            <div class="glare" id="glareOverlay"></div>
+    <div id="app-container">
+        <!-- Interactive Trigger Card -->
+        <div class="trigger-card" id="mainCard">
+            <div class="glare" id="cardGlare"></div>
         </div>
         
-        <!-- New cards will appear here -->
-        <div id="stack" style="display: flex; gap: 15px;"></div>
+        <!-- Container for uploaded images -->
+        <div id="card-stack"></div>
     </div>
 
-    <input type="file" id="fileInput" accept="image/png">
+    <!-- Hidden File Input (Accepts only PNGs as requested) -->
+    <input type="file" id="image-upload" accept="image/png">
 
     <script>
-        const card = document.getElementById('triggerCard');
-        const glare = document.getElementById('glareOverlay');
-        const fileInput = document.getElementById('fileInput');
-        const stack = document.getElementById('stack');
+        const mainCard = document.getElementById('mainCard');
+        const cardGlare = document.getElementById('cardGlare');
+        const imageUpload = document.getElementById('image-upload');
+        const cardStack = document.getElementById('card-stack');
 
-        // 3D Tilt Effect
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
+        // --- 1. Handle 3D Rotation and Glare on Mouse Over ---
+        mainCard.addEventListener('mousemove', (e) => {
+            const rect = mainCard.getBoundingClientRect();
+            
+            // Calculate mouse position relative to the card
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
+            // Calculate center point of the card
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
             
-            const rotateX = (centerY - y) / 5;
-            const rotateY = (x - centerX) / 5;
+            // Calculate rotation percentages (divided by 10 to dampen the effect)
+            const rotateX = ((centerY - y) / 10).toFixed(2);
+            const rotateY = ((x - centerX) / 10).toFixed(2);
             
-            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+            // Apply 3D transform
+            mainCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
             
-            // Move glare
+            // Move the glare based on cursor position
             const glareX = (x / rect.width) * 100;
             const glareY = (y / rect.height) * 100;
-            glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 80%)`;
+            cardGlare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%)`;
         });
 
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
-            glare.style.opacity = '0';
+        // --- 2. Reset 3D Effect on Mouse Leave ---
+        mainCard.addEventListener('mouseleave', () => {
+            mainCard.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
+            cardGlare.style.opacity = '0';
         });
 
-        // Trigger File Upload
-        card.addEventListener('click', () => {
-            fileInput.click();
+        // --- 3. Trigger File Upload on Left Click ---
+        mainCard.addEventListener('click', () => {
+            imageUpload.click();
         });
 
-        // Handle Image and Stack Card
-        fileInput.addEventListener('change', function(e) {
+        // --- 4. Handle File Selection and Create New Card ---
+        imageUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
+            
             if (file) {
                 const reader = new FileReader();
+                
                 reader.onload = function(event) {
+                    // Create new card element
                     const newCard = document.createElement('div');
-                    newCard.className = 'stacked-card';
+                    newCard.classList.add('stacked-card');
+                    
+                    // Set the uploaded image as the background
                     newCard.style.backgroundImage = `url('${event.target.result}')`;
-                    stack.appendChild(newCard);
-                }
+                    
+                    // Append to the stack (appears on the right)
+                    cardStack.appendChild(newCard);
+                };
+                
                 reader.readAsDataURL(file);
             }
-            // Reset input so same file can be picked again
+            
+            // Reset input value so the same file can be uploaded again if needed
             this.value = '';
         });
     </script>
