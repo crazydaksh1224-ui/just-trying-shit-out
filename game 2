@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cozy Bakery+</title>
+
+<style>
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:sans-serif;
+}
+
+body {
+  background:#ffffff;
+  overflow:hidden;
+}
+
+/* CURSOR */
+.cursor {
+  position:fixed;
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  background:#f2f2f2;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  transition:transform 0.15s ease-out;
+  z-index:999;
+}
+
+/* GAME */
+.game {
+  width:360px;
+  margin:auto;
+  margin-top:40px;
+}
+
+.header {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+
+.box {
+  padding:10px 15px;
+  border-radius:20px;
+  background:white;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* GRID */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:15px;
+}
+
+/* CARD */
+.card {
+  height:120px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  background:white;
+  box-shadow:0 10px 20px rgba(0,0,0,0.1);
+  transition:transform 0.2s ease, box-shadow 0.3s;
+  transform-style:preserve-3d;
+  cursor:pointer;
+}
+
+.card:hover {
+  box-shadow:0 15px 25px rgba(0,0,0,0.15);
+}
+
+/* FEEDBACK */
+.correct {
+  animation:pop 0.4s;
+}
+
+.wrong {
+  animation:shake 0.3s;
+}
+
+@keyframes pop {
+  50% { transform:scale(1.2); }
+}
+
+@keyframes shake {
+  25% { transform:translateX(-5px); }
+  75% { transform:translateX(5px); }
+}
+
+/* FACT CARD */
+.fact {
+  position:fixed;
+  bottom:-20px;
+  right:20px;
+  width:220px;
+  padding:15px;
+  border-radius:20px;
+  background:white;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  font-size:13px;
+  animation:slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { transform:translateY(100px); opacity:0; }
+  to { transform:translateY(0); opacity:1; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<div class="game">
+  <div class="header">
+    <div class="box">Score: <span id="score">0</span></div>
+    <div class="box">Level: <span id="level">1</span></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+
+/* DATA */
+let score = 0;
+let level = 1;
+
+const items = ["🍞","🥐","🧁","🍩","🍪","🍰"];
+
+const facts = {
+  "🍞":"Bread is one of the oldest foods ever made!",
+  "🥐":"Croissants were inspired by Austrian kipferl.",
+  "🧁":"Cupcakes became popular in the 19th century.",
+  "🍩":"Doughnuts were once called 'oily cakes'.",
+  "🍪":"Cookies were first used as test cakes.",
+  "🍰":"Cake was originally more bread-like!"
+};
+
+/* GRID */
+function generateGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  let count = level + 3;
+  let arr = items.slice(0,count);
+  let target = arr[Math.floor(Math.random()*arr.length)];
+  window.target = target;
+
+  arr.forEach(item=>{
+    let card = document.createElement("div");
+    card.className = "card";
+    card.innerText = item;
+
+    card.onclick = ()=>clickCard(card,item);
+    card.oncontextmenu = (e)=>{
+      e.preventDefault();
+      showFact(item);
+    };
+
+    grid.appendChild(card);
+  });
+}
+
+/* CLICK */
+function clickCard(el,item) {
+  if(item === target){
+    score += 10;
+    el.classList.add("correct");
+  } else {
+    score -= 2;
+    el.classList.add("wrong");
+  }
+
+  document.getElementById("score").innerText = score;
+
+  setTimeout(generateGrid,400);
+}
+
+/* FACT CARD */
+function showFact(item) {
+  let old = document.querySelector(".fact");
+  if(old) old.remove();
+
+  let div = document.createElement("div");
+  div.className = "fact";
+  div.innerText = facts[item] || "Tasty item!";
+
+  document.body.appendChild(div);
+
+  setTimeout(()=>div.remove(),3000);
+}
+
+/* 3D ROTATION FOLLOW MOUSE */
+document.addEventListener("mousemove",(e)=>{
+  document.querySelectorAll(".card").forEach(card=>{
+    let rect = card.getBoundingClientRect();
+    let x = (e.clientX - rect.left) / rect.width - 0.5;
+    let y = (e.clientY - rect.top) / rect.height - 0.5;
+
+    card.style.transform = `
+      rotateY(${x*20}deg)
+      rotateX(${-y*20}deg)
+      scale(1.05)
+    `;
+  });
+});
+
+/* CURSOR (SMOOTH FOLLOW) */
+const cursor = document.getElementById("cursor");
+let cx = 0, cy = 0;
+
+document.addEventListener("mousemove",(e)=>{
+  cx += (e.clientX - cx)*0.15;
+  cy += (e.clientY - cy)*0.15;
+
+  cursor.style.left = cx + "px";
+  cursor.style.top = cy + "px";
+});
+
+/* INIT */
+generateGrid();
+
+</script>
+
+</body>
+</html>
