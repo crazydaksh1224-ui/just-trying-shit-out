@@ -157,30 +157,30 @@
         <div id="screen-game" class="screen hidden">
             <h2 class="font-curvy text-3xl font-bold mb-12 text-center">Choose your path</h2>
             
-            <div class="flex flex-col md:flex-row gap-8 w-full max-w-5xl px-6 justify-center">
+            <div class="flex flex-row flex-wrap gap-8 w-full max-w-6xl px-6 justify-center items-center">
                 
                 <!-- Card 1 -->
-                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'alpha')">
-                    <div class="w-20 h-20 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div class="notion-card w-[260px] h-[420px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'alpha')">
+                    <div class="w-24 h-24 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
-                    <h3 class="font-curvy text-2xl font-bold">Path Alpha</h3>
+                    <h3 class="font-curvy text-3xl font-bold text-center">Path<br>Alpha</h3>
                 </div>
 
                 <!-- Card 2 -->
-                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'beta')">
-                    <div class="w-20 h-20 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <div class="notion-card w-[260px] h-[420px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'beta')">
+                    <div class="w-24 h-24 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                     </div>
-                    <h3 class="font-curvy text-2xl font-bold">Path Beta</h3>
+                    <h3 class="font-curvy text-3xl font-bold text-center">Path<br>Beta</h3>
                 </div>
 
                 <!-- Card 3 -->
-                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'gamma')">
-                    <div class="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <svg class="w-10 h-10 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                <div class="notion-card w-[260px] h-[420px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'gamma')">
+                    <div class="w-24 h-24 bg-rose-50 rounded-[1.5rem] flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-12 h-12 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                     </div>
-                    <h3 class="font-curvy text-2xl font-bold">Path Gamma</h3>
+                    <h3 class="font-curvy text-3xl font-bold text-center">Path<br>Gamma</h3>
                 </div>
 
             </div>
@@ -267,15 +267,14 @@
         
         let width, height;
         const GRID_SIZE = 40; // Size of each square
-        const SNAKE_COLOR = 'rgba(55, 53, 47, 0.08)'; // Very subtle Notion dark grey
-        const SNAKE_HEAD_COLOR = 'rgba(55, 53, 47, 0.15)'; 
 
         let cols, rows;
-        let snake = [];
-        let dx = 1; // Direction X
-        let dy = 0; // Direction Y
+        let snakes = [];
+        const NUM_SNAKES = 3;
+        const SNAKE_LENGTH = 30;
+        
         let lastRenderTime = 0;
-        const SNAKE_SPEED = 120; // Milliseconds per move (lower is faster)
+        const SNAKE_SPEED = 40; // 3x faster than original 120ms
 
         function resizeCanvas() {
             width = window.innerWidth;
@@ -290,53 +289,70 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Initialize snake in the middle
-        function initSnake() {
-            snake = [];
-            const startX = Math.floor(cols / 2);
-            const startY = Math.floor(rows / 2);
+        // Initialize multiple snakes
+        function initSnakes() {
+            snakes = [];
             
-            for (let i = 0; i < 6; i++) {
-                snake.push({ x: startX - i, y: startY });
-            }
-        }
-
-        initSnake();
-
-        function updateSnake() {
-            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-
-            // Wrap around edges (Portal effect)
-            if (head.x >= cols) head.x = 0;
-            if (head.x < 0) head.x = cols - 1;
-            if (head.y >= rows) head.y = 0;
-            if (head.y < 0) head.y = rows - 1;
-
-            snake.unshift(head);
-            snake.pop(); // Remove tail to keep length constant
-
-            // AI: Randomly change direction occasionally
-            if (Math.random() < 0.1) {
-                const directions = [
-                    {x: 1, y: 0}, {x: -1, y: 0}, 
-                    {x: 0, y: 1}, {x: 0, y: -1}
-                ];
+            for(let s = 0; s < NUM_SNAKES; s++) {
+                // Randomize start position
+                const startX = Math.floor(Math.random() * (cols - 10)) + 5;
+                const startY = Math.floor(Math.random() * (rows - 10)) + 5;
                 
-                // Pick random direction
-                let newDir = directions[Math.floor(Math.random() * directions.length)];
+                // Randomize initial direction
+                const dirs = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
+                const dir = dirs[Math.floor(Math.random() * dirs.length)];
                 
-                // Prevent 180 degree turns (going back into itself instantly)
-                if (newDir.x !== -dx || newDir.y !== -dy) {
-                    dx = newDir.x;
-                    dy = newDir.y;
+                let segments = [];
+                for (let i = 0; i < SNAKE_LENGTH; i++) {
+                    segments.push({ x: startX - (i * dir.x), y: startY - (i * dir.y) });
                 }
+                
+                snakes.push({
+                    segments: segments,
+                    dx: dir.x,
+                    dy: dir.y
+                });
             }
         }
 
-        function drawSnake() {
+        initSnakes();
+
+        function updateSnakes() {
+            snakes.forEach(snake => {
+                const head = { x: snake.segments[0].x + snake.dx, y: snake.segments[0].y + snake.dy };
+
+                // Wrap around edges (Portal effect)
+                if (head.x >= cols) head.x = 0;
+                if (head.x < 0) head.x = cols - 1;
+                if (head.y >= rows) head.y = 0;
+                if (head.y < 0) head.y = rows - 1;
+
+                snake.segments.unshift(head);
+                snake.segments.pop(); // Remove tail to keep length constant
+
+                // AI: Randomly change direction occasionally
+                if (Math.random() < 0.1) {
+                    const directions = [
+                        {x: 1, y: 0}, {x: -1, y: 0}, 
+                        {x: 0, y: 1}, {x: 0, y: -1}
+                    ];
+                    
+                    // Pick random direction
+                    let newDir = directions[Math.floor(Math.random() * directions.length)];
+                    
+                    // Prevent 180 degree turns (going back into itself instantly)
+                    if (newDir.x !== -snake.dx || newDir.y !== -snake.dy) {
+                        snake.dx = newDir.x;
+                        snake.dy = newDir.y;
+                    }
+                }
+            });
+        }
+
+        function drawSnakes() {
             ctx.clearRect(0, 0, width, height);
             
-            // Draw grid dots (optional, adds to the aesthetic)
+            // Draw grid dots 
             ctx.fillStyle = 'rgba(0,0,0,0.03)';
             for(let i=0; i<cols; i++){
                 for(let j=0; j<rows; j++){
@@ -346,32 +362,34 @@
                 }
             }
 
-            // Draw Snake
-            snake.forEach((segment, index) => {
-                // Determine padding for the "pop" look (gaps between squares)
-                const padding = 4;
-                const size = GRID_SIZE - (padding * 2);
-                
-                // Head is slightly darker
-                ctx.fillStyle = index === 0 ? SNAKE_HEAD_COLOR : SNAKE_COLOR;
-                
-                // Draw rounded rectangle
-                const x = segment.x * GRID_SIZE + padding;
-                const y = segment.y * GRID_SIZE + padding;
-                const radius = 8;
-                
-                ctx.beginPath();
-                ctx.moveTo(x + radius, y);
-                ctx.lineTo(x + size - radius, y);
-                ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
-                ctx.lineTo(x + size, y + size - radius);
-                ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
-                ctx.lineTo(x + radius, y + size);
-                ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
-                ctx.lineTo(x, y + radius);
-                ctx.quadraticCurveTo(x, y, x + radius, y);
-                ctx.closePath();
-                ctx.fill();
+            // Draw Snakes
+            snakes.forEach(snake => {
+                snake.segments.forEach((segment, index) => {
+                    const padding = 4;
+                    const size = GRID_SIZE - (padding * 2);
+                    
+                    // Gradient from pitch black (0) to light grey (210)
+                    const colorVal = Math.floor((index / (SNAKE_LENGTH - 1)) * 210);
+                    ctx.fillStyle = `rgb(${colorVal}, ${colorVal}, ${colorVal})`;
+                    
+                    // Draw rounded rectangle
+                    const x = segment.x * GRID_SIZE + padding;
+                    const y = segment.y * GRID_SIZE + padding;
+                    const radius = 8;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + size - radius, y);
+                    ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
+                    ctx.lineTo(x + size, y + size - radius);
+                    ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+                    ctx.lineTo(x + radius, y + size);
+                    ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.closePath();
+                    ctx.fill();
+                });
             });
         }
 
@@ -383,8 +401,8 @@
             if (secondsSinceLastRender < SNAKE_SPEED) return;
             
             lastRenderTime = currentTime;
-            updateSnake();
-            drawSnake();
+            updateSnakes();
+            drawSnakes();
         }
 
         // Start the loop
