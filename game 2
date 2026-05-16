@@ -1,386 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cozy Bakery+</title>
-<style>
-  :root{
-    --bg:#ffffff;
-    --card:#ffffff;
-    --ink:#1f1f1f;
-    --muted:#666;
-    --shadow:0 12px 30px rgba(0,0,0,.08);
-    --shadow2:0 20px 45px rgba(0,0,0,.12);
-    --soft:24px;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Choice Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #F7F6F3;
+            --text-main: #37352F;
+            --card-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 2px 4px;
+            --card-hover-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 8px 16px;
+        }
 
-  *{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent scrolling */
+            color: var(--text-main);
+        }
 
-  html,body{
-    width:100%;
-    height:100%;
-    background:var(--bg);
-    overflow:hidden;
-    cursor:none;
-  }
+        .font-curvy {
+            font-family: 'Fredoka', sans-serif;
+        }
 
-  body, body *{
-    cursor:none !important;
-  }
+        /* Canvas Background */
+        #snake-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
 
-  .game{
-    width:min(92vw, 420px);
-    margin:36px auto 0;
-    user-select:none;
-    perspective:1000px;
-  }
+        /* UI Container */
+        #ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
 
-  .header{
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:18px;
-  }
+        /* Card Styles */
+        .notion-card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
 
-  .box{
-    flex:1;
-    padding:12px 16px;
-    border-radius:999px;
-    background:#fff;
-    box-shadow:var(--shadow);
-    color:var(--ink);
-    font-size:14px;
-    font-weight:700;
-    letter-spacing:.2px;
-    text-align:center;
-  }
+        .notion-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-hover-shadow);
+        }
 
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:14px;
-  }
+        .notion-card:active {
+            transform: translateY(2px) scale(0.98);
+        }
 
-  .card{
-    height:128px;
-    border-radius:26px;
-    background:var(--card);
-    box-shadow:var(--shadow);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:34px;
-    position:relative;
-    transform-style:preserve-3d;
-    transition:
-      transform .22s cubic-bezier(.2,.9,.2,1),
-      box-shadow .22s ease,
-      scale .22s ease;
-    will-change:transform;
-    user-select:none;
-  }
+        /* Screens */
+        .screen {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
 
-  .card:hover{
-    box-shadow:var(--shadow2);
-  }
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
 
-  .card.correct{
-    animation:pop .38s ease;
-  }
+        .screen.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1);
+        }
 
-  .card.wrong{
-    animation:shake .34s ease;
-  }
+        /* Floating Feedback Animation */
+        .feedback-pop {
+            position: fixed;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            pointer-events: none;
+            z-index: 100;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: dopamineFloat 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
 
-  @keyframes pop{
-    0%{ transform:scale(1); }
-    50%{ transform:scale(1.12); }
-    100%{ transform:scale(1); }
-  }
+        @keyframes dopamineFloat {
+            0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+            20% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+            80% { opacity: 0.8; transform: translateY(-40px) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+        }
 
-  @keyframes shake{
-    0%,100%{ transform:translateX(0); }
-    25%{ transform:translateX(-4px); }
-    75%{ transform:translateX(4px); }
-  }
-
-  .fact{
-    position:fixed;
-    right:18px;
-    bottom:-8vh;
-    width:min(82vw, 540px);
-    height:50vh;
-    border-radius:34px 34px 26px 26px;
-    background:#fff;
-    box-shadow:0 25px 60px rgba(0,0,0,.18);
-    padding:24px 26px 30px;
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-start;
-    gap:18px;
-    overflow:hidden;
-    animation:slideUp .34s cubic-bezier(.18,.9,.22,1);
-    z-index:50;
-  }
-
-  .fact .label{
-    font-size:12px;
-    font-weight:800;
-    letter-spacing:.18em;
-    color:var(--muted);
-    text-transform:uppercase;
-  }
-
-  .fact .text{
-    font-family:"Trebuchet MS","Comic Sans MS","Segoe UI",sans-serif;
-    font-size:clamp(28px, 4vw, 48px);
-    line-height:1.08;
-    font-weight:900;
-    color:var(--ink);
-    letter-spacing:-0.04em;
-    word-break:break-word;
-  }
-
-  .fact .item{
-    font-size:clamp(24px, 3vw, 34px);
-    font-weight:900;
-    letter-spacing:-0.03em;
-    margin-top:auto;
-  }
-
-  @keyframes slideUp{
-    from{
-      transform:translateY(80px);
-      opacity:0;
-    }
-    to{
-      transform:translateY(0);
-      opacity:1;
-    }
-  }
-
-  .cursor{
-    position:fixed;
-    left:0;
-    top:0;
-    width:44px;
-    height:44px;
-    border-radius:18px;
-    background:rgba(245,245,245,.95);
-    box-shadow:0 10px 28px rgba(0,0,0,.12);
-    pointer-events:none;
-    transform:translate(-50%,-50%);
-    z-index:999;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:transform .14s cubic-bezier(.18,.9,.22,1);
-    will-change:transform,left,top;
-    overflow:hidden;
-  }
-
-  .cursor::before{
-    content:"";
-    width:16px;
-    height:16px;
-    border-radius:6px 12px 12px 6px;
-    border:3px solid rgba(50,50,50,.55);
-    border-left-color:transparent;
-    border-top-color:transparent;
-    transform:rotate(-45deg) translateX(-1px);
-    display:block;
-  }
-
-  .cursor.bounce{
-    transition:transform .24s cubic-bezier(.16,1.35,.32,1);
-  }
-
-  .hint{
-    position:fixed;
-    left:16px;
-    bottom:16px;
-    font-size:12px;
-    color:#8b8b8b;
-    background:rgba(255,255,255,.7);
-    backdrop-filter:blur(8px);
-    padding:8px 12px;
-    border-radius:999px;
-    box-shadow:var(--shadow);
-    z-index:5;
-  }
-</style>
+        /* Score Badge */
+        #score-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            font-size: 1.25rem;
+            font-weight: 600;
+            z-index: 20;
+            transition: transform 0.2s ease;
+        }
+    </style>
 </head>
 <body>
 
-<div class="cursor" id="cursor"></div>
+    <canvas id="snake-canvas"></canvas>
 
-<div class="game">
-  <div class="header">
-    <div class="box">Score: <span id="score">0</span></div>
-    <div class="box">Level: <span id="level">1</span></div>
-  </div>
-  <div class="grid" id="grid"></div>
-</div>
+    <div id="score-badge" class="font-curvy hidden" style="opacity: 0;">
+        Score: <span id="score-value" class="text-indigo-600">0</span>
+    </div>
 
-<div class="hint">Left click to score • Right click for fact</div>
+    <div id="ui-layer">
+        
+        <!-- Welcome Screen -->
+        <div id="screen-welcome" class="screen active">
+            <div id="start-btn" class="notion-card px-16 py-12 md:px-24 md:py-16 flex flex-col items-center max-w-4xl w-full mx-4 text-center">
+                <h1 class="font-curvy text-5xl md:text-7xl font-bold mb-4 tracking-tight">Welcome Player</h1>
+                <p class="text-gray-500 font-medium text-lg uppercase tracking-widest mt-2">Tap anywhere to begin</p>
+            </div>
+        </div>
 
-<script>
-  let score = 0;
-  let level = 1;
-  const items = ["🍞","🥐","🧁","🍩","🍪","🍰"];
-  const facts = {
-    "🍞":"Bread is one of the oldest prepared foods in human history.",
-    "🥐":"The croissant became a bakery icon far beyond its origin story.",
-    "🧁":"Cupcakes became popular because they were easy to portion and serve.",
-    "🍩":"Doughnuts became famous as a sweet, shareable comfort snack.",
-    "🍪":"Cookies became a bakery favorite because they are simple and versatile.",
-    "🍰":"Cake is often associated with celebration, making it feel instantly cozy."
-  };
+        <!-- Game Screen (3 Cards) -->
+        <div id="screen-game" class="screen hidden">
+            <h2 class="font-curvy text-3xl font-bold mb-12 text-center">Choose your path</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8 w-full max-w-5xl px-6 justify-center">
+                
+                <!-- Card 1 -->
+                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'alpha')">
+                    <div class="w-20 h-20 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="font-curvy text-2xl font-bold">Path Alpha</h3>
+                </div>
 
-  const grid = document.getElementById("grid");
-  const cursor = document.getElementById("cursor");
-  const scoreEl = document.getElementById("score");
-  const levelEl = document.getElementById("level");
+                <!-- Card 2 -->
+                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'beta')">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    </div>
+                    <h3 class="font-curvy text-2xl font-bold">Path Beta</h3>
+                </div>
 
-  let target = "";
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let curX = mouseX;
-  let curY = mouseY;
-  let isAnimatingCursor = false;
+                <!-- Card 3 -->
+                <div class="notion-card flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 relative overflow-hidden group" onclick="handleChoice(this, 'gamma')">
+                    <div class="w-20 h-20 bg-rose-50 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-10 h-10 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    </div>
+                    <h3 class="font-curvy text-2xl font-bold">Path Gamma</h3>
+                </div>
 
-  function updateUI() {
-    scoreEl.textContent = score;
-    levelEl.textContent = level;
-  }
+            </div>
+        </div>
+    </div>
 
-  function generateGrid() {
-    grid.innerHTML = "";
+    <script>
+        /* --- GAME STATE --- */
+        let score = 0;
+        const scoreBadge = document.getElementById('score-badge');
+        const scoreValue = document.getElementById('score-value');
+        const screenWelcome = document.getElementById('screen-welcome');
+        const screenGame = document.getElementById('screen-game');
+        const startBtn = document.getElementById('start-btn');
 
-    const count = Math.min(level + 3, items.length);
-    const arr = items.slice(0, count);
-    target = arr[Math.floor(Math.random() * arr.length)];
+        /* --- UI INTERACTIONS --- */
+        startBtn.addEventListener('click', () => {
+            screenWelcome.classList.remove('active');
+            screenWelcome.classList.add('hidden');
+            
+            setTimeout(() => {
+                screenGame.classList.remove('hidden');
+                screenGame.classList.add('active');
+                
+                // Show score badge
+                scoreBadge.classList.remove('hidden');
+                scoreBadge.style.opacity = '1';
+            }, 300); // Wait for fade out
+        });
 
-    arr.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.textContent = item;
+        function handleChoice(element, pathId) {
+            // Determine outcome (60% chance to gain, 40% to lose for fun)
+            const isGain = Math.random() > 0.4;
+            const points = Math.floor(Math.random() * 50) + 10;
+            
+            if (isGain) {
+                score += points;
+                createFeedback(`+${points}`, element, '#10B981'); // Emerald
+            } else {
+                score -= points;
+                createFeedback(`-${points}`, element, '#F43F5E'); // Rose
+            }
 
-      card.addEventListener("click", () => {
-        if (item === target) {
-          score += 10;
-          card.classList.add("correct");
-          setTimeout(() => card.classList.remove("correct"), 380);
-        } else {
-          score = Math.max(0, score - 2);
-          card.classList.add("wrong");
-          setTimeout(() => card.classList.remove("wrong"), 340);
+            // Update UI Score
+            scoreValue.innerText = score;
+            
+            // Pop the score badge briefly
+            scoreBadge.style.transform = 'scale(1.1)';
+            setTimeout(() => scoreBadge.style.transform = 'scale(1)', 200);
         }
-        updateUI();
-        setTimeout(generateGrid, 420);
-      });
 
-      card.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        showFact(item);
-      });
+        function createFeedback(text, parentElement, color) {
+            const rect = parentElement.getBoundingClientRect();
+            const feedback = document.createElement('div');
+            
+            feedback.className = 'feedback-pop';
+            feedback.innerText = text;
+            feedback.style.color = color;
+            
+            // Randomize position slightly around the card center
+            const centerX = rect.left + (rect.width / 2);
+            const centerY = rect.top + (rect.height / 2);
+            
+            // Constrain randomness so it doesn't fly off screen
+            const offsetX = (Math.random() - 0.5) * (rect.width * 0.6);
+            const offsetY = (Math.random() - 0.5) * (rect.height * 0.6);
+            
+            feedback.style.left = `${centerX + offsetX}px`;
+            feedback.style.top = `${centerY + offsetY}px`;
+            // Center alignment based on coordinate
+            feedback.style.transform = `translate(-50%, -50%)`; 
+            
+            document.body.appendChild(feedback);
+            
+            // Remove after animation completes (1.2s + buffer)
+            setTimeout(() => {
+                feedback.remove();
+            }, 1300);
+        }
 
-      grid.appendChild(card);
-    });
-  }
+        /* --- CANVAS SNAKE BACKGROUND --- */
+        const canvas = document.getElementById('snake-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        const GRID_SIZE = 40; // Size of each square
+        const SNAKE_COLOR = 'rgba(55, 53, 47, 0.08)'; // Very subtle Notion dark grey
+        const SNAKE_HEAD_COLOR = 'rgba(55, 53, 47, 0.15)'; 
 
-  function showFact(item) {
-    const old = document.querySelector(".fact");
-    if (old) old.remove();
+        let cols, rows;
+        let snake = [];
+        let dx = 1; // Direction X
+        let dy = 0; // Direction Y
+        let lastRenderTime = 0;
+        const SNAKE_SPEED = 120; // Milliseconds per move (lower is faster)
 
-    const fact = document.createElement("div");
-    fact.className = "fact";
-    fact.innerHTML = `
-      <div class="label">Random Cozy Fact</div>
-      <div class="text">${facts[item] || "This item feels cozy, soft, and bakery-perfect."}</div>
-      <div class="item">${item}</div>
-    `;
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            cols = Math.floor(width / GRID_SIZE) + 1;
+            rows = Math.floor(height / GRID_SIZE) + 1;
+        }
 
-    document.body.appendChild(fact);
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-    setTimeout(() => {
-      fact.style.transition = "transform .28s ease, opacity .28s ease";
-      fact.style.transform = "translateY(40px)";
-      fact.style.opacity = "0";
-      setTimeout(() => fact.remove(), 280);
-    }, 3200);
-  }
+        // Initialize snake in the middle
+        function initSnake() {
+            snake = [];
+            const startX = Math.floor(cols / 2);
+            const startY = Math.floor(rows / 2);
+            
+            for (let i = 0; i < 6; i++) {
+                snake.push({ x: startX - i, y: startY });
+            }
+        }
 
-  function rotateCardsTowardMouse() {
-    const cards = document.querySelectorAll(".card");
-    cards.forEach(card => {
-      const rect = card.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
+        initSnake();
 
-      const dx = (mouseX - cx) / rect.width;
-      const dy = (mouseY - cy) / rect.height;
+        function updateSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-      const maxTilt = 7;
-      const rotY = Math.max(-maxTilt, Math.min(maxTilt, dx * 10));
-      const rotX = Math.max(-maxTilt, Math.min(maxTilt, -dy * 10));
+            // Wrap around edges (Portal effect)
+            if (head.x >= cols) head.x = 0;
+            if (head.x < 0) head.x = cols - 1;
+            if (head.y >= rows) head.y = 0;
+            if (head.y < 0) head.y = rows - 1;
 
-      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(0)`;
-    });
+            snake.unshift(head);
+            snake.pop(); // Remove tail to keep length constant
 
-    requestAnimationFrame(rotateCardsTowardMouse);
-  }
+            // AI: Randomly change direction occasionally
+            if (Math.random() < 0.1) {
+                const directions = [
+                    {x: 1, y: 0}, {x: -1, y: 0}, 
+                    {x: 0, y: 1}, {x: 0, y: -1}
+                ];
+                
+                // Pick random direction
+                let newDir = directions[Math.floor(Math.random() * directions.length)];
+                
+                // Prevent 180 degree turns (going back into itself instantly)
+                if (newDir.x !== -dx || newDir.y !== -dy) {
+                    dx = newDir.x;
+                    dy = newDir.y;
+                }
+            }
+        }
 
-  function animateCursor() {
-    const dx = mouseX - curX;
-    const dy = mouseY - curY;
+        function drawSnake() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw grid dots (optional, adds to the aesthetic)
+            ctx.fillStyle = 'rgba(0,0,0,0.03)';
+            for(let i=0; i<cols; i++){
+                for(let j=0; j<rows; j++){
+                    ctx.beginPath();
+                    ctx.arc(i * GRID_SIZE + GRID_SIZE/2, j * GRID_SIZE + GRID_SIZE/2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
 
-    curX += dx * 0.14;
-    curY += dy * 0.14;
+            // Draw Snake
+            snake.forEach((segment, index) => {
+                // Determine padding for the "pop" look (gaps between squares)
+                const padding = 4;
+                const size = GRID_SIZE - (padding * 2);
+                
+                // Head is slightly darker
+                ctx.fillStyle = index === 0 ? SNAKE_HEAD_COLOR : SNAKE_COLOR;
+                
+                // Draw rounded rectangle
+                const x = segment.x * GRID_SIZE + padding;
+                const y = segment.y * GRID_SIZE + padding;
+                const radius = 8;
+                
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + size - radius, y);
+                ctx.quadraticCurveTo(x + size, y, x + size, y + radius);
+                ctx.lineTo(x + size, y + size - radius);
+                ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+                ctx.lineTo(x + radius, y + size);
+                ctx.quadraticCurveTo(x, y + size, x, y + size - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+                ctx.fill();
+            });
+        }
 
-    cursor.style.left = curX + "px";
-    cursor.style.top = curY + "px";
+        // Main game loop
+        function gameLoop(currentTime) {
+            window.requestAnimationFrame(gameLoop);
+            
+            const secondsSinceLastRender = currentTime - lastRenderTime;
+            if (secondsSinceLastRender < SNAKE_SPEED) return;
+            
+            lastRenderTime = currentTime;
+            updateSnake();
+            drawSnake();
+        }
 
-    const speed = Math.sqrt(dx * dx + dy * dy);
-    const scale = 1 + Math.min(speed / 500, 0.14);
+        // Start the loop
+        window.requestAnimationFrame(gameLoop);
 
-    cursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-    requestAnimationFrame(animateCursor);
-  }
-
-  document.addEventListener("mousemove", (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    cursor.classList.add("bounce");
-    clearTimeout(window.__cursorBounce);
-    window.__cursorBounce = setTimeout(() => cursor.classList.remove("bounce"), 120);
-  });
-
-  document.addEventListener("mouseleave", () => {
-    cursor.style.opacity = "0";
-  });
-
-  document.addEventListener("mouseenter", () => {
-    cursor.style.opacity = "1";
-  });
-
-  window.addEventListener("resize", () => {
-    mouseX = window.innerWidth / 2;
-    mouseY = window.innerHeight / 2;
-  });
-
-  updateUI();
-  generateGrid();
-  rotateCardsTowardMouse();
-  animateCursor();
-</script>
-
+    </script>
 </body>
 </html>
